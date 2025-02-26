@@ -60,9 +60,9 @@ const CurrencyStrengthMeter = () => {
   };
 
   return (
-    <div className="container my-5 pt-4">
+    <div className="container my-4 pt-3 mt-5">
       <div className="d-flex justify-content-between align-items-center">
-        <h2 className="fw-bold text-dark display-6">Live Currency Strength</h2>
+        <h2 className="fw-bold text-dark">Live Currency Strength</h2>
 
         {/* Refresh Button with Market Status Indicator ✅ */}
         <div className="d-flex align-items-center">
@@ -81,7 +81,7 @@ const CurrencyStrengthMeter = () => {
 
           {/* Refresh Button 🔄 */}
           <button
-            className="btn d-flex align-items-center text-white"
+            className="btn text-white"
             onClick={refreshPage}
             style={{
               backgroundColor: "#212529", // ✅ Dark Gray Background
@@ -102,16 +102,17 @@ const CurrencyStrengthMeter = () => {
       {loading && <p className="text-center">Loading currency strength data...</p>}
       {error && <p className="text-center text-danger">{error}</p>}
 
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mt-3">
+      {/* ✅ Updated Layout for Mobile */}
+      <div className="row row-cols-2 row-cols-md-4 g-3 mt-3">
         {currencies.map((currency) => {
           const isIncreasing = currency.strength > currency.previous;
           return (
             <div key={currency.code} className="col d-flex">
               <div
-                className="card text-center shadow-sm p-4 rounded-4 w-100"
-                style={{ background: "#fff", border: "1px solid #ddd", minHeight: "180px" }}
+                className="card text-center shadow-sm p-3 rounded-3 w-100"
+                style={{ background: "#fff", border: "1px solid #ddd", minHeight: "150px" }}
               >
-                <h3 className="mb-3 text-dark fw-bold">
+                <h4 className="mb-2 text-dark fw-bold">
                   {currency.code}
                   <span
                     style={{
@@ -122,16 +123,16 @@ const CurrencyStrengthMeter = () => {
                   >
                     {isIncreasing ? <FaArrowUp /> : <FaArrowDown />}
                   </span>
-                </h3>
+                </h4>
 
                 {/* Bar Graph Representation */}
-                <div className="d-flex justify-content-center align-items-end" style={{ height: "50px", gap: "4px" }}>
+                <div className="d-flex justify-content-center align-items-end" style={{ height: "40px", gap: "4px" }}>
                   {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
                       style={{
-                        width: "10px",
-                        height: `${(i + 1) * (8 + (currency.strength / 100) * 2)}px`,
+                        width: "8px",
+                        height: `${(i + 1) * (7 + (currency.strength / 100) * 2)}px`,
                         backgroundColor: i < getBars(currency.strength) ? (isIncreasing ? "green" : "red") : "#ccc",
                         borderRadius: "2px",
                         transition: "height 0.5s ease-in-out",
@@ -147,7 +148,7 @@ const CurrencyStrengthMeter = () => {
         })}
       </div>
 
-      <div className="mt-5 p-4 text-center text-muted border-top">
+      <div className="mt-4 p-3 text-center text-muted border-top">
         <p>
           🔒 <strong>Security Protocol:</strong> This platform follows strict security measures to protect user data.
         </p>
