@@ -1,22 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/css/bootstrap.min.css"; // Only CSS, no JS
 
 export default function Navbar() {
-  const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsClient(true); // Ensures component only runs on client
-      import("bootstrap/dist/js/bootstrap.bundle.min").catch(() => {});
-    }
-  }, []);
-
-  // Prevent rendering during SSR
-  if (!isClient) return null;
-
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
       <div className="container">
