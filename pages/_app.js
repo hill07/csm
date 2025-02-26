@@ -1,5 +1,13 @@
-import "@/styles/globals.css";
+import dynamic from "next/dynamic";
 
-export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />;
+// Import Navbar without SSR
+const Navbar = dynamic(() => import("../components/Navbar"), { ssr: false });
+
+export default function Layout({ children }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
 }
