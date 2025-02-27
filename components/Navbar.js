@@ -1,21 +1,18 @@
-import React from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import "bootstrap/dist/css/bootstrap.min.css"; // Only CSS, no JS
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function Navbar() {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("bootstrap/js/dist/collapse"); // Only import collapse (avoid full Bootstrap JS)
+    }
+  }, []);
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
       <div className="container">
-        <Link
-  href="/"
-  className="navbar-brand fw-bold text-white fs-4"
-  onClick={(e) => {
-    e.preventDefault(); // Prevents Next.js default navigation
-    window.location.href = "/";
-  }}
->
-  FOREX METER
-</Link>
+        <Link href="/" className="navbar-brand fw-bold text-white fs-4" onClick={(e) => { e.preventDefault(); // Prevents Next.js default navigation window.location.href = "/"; }} > FOREX METER </Link>
 
         <button
           className="navbar-toggler"
@@ -40,4 +37,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+} 
