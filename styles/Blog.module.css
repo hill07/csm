@@ -24,11 +24,12 @@
 }
 
 .blog-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
+    width: 100%;  /* Makes it responsive */
+    height: 200px; /* Adjust height as needed */
+    object-fit: cover; /* Ensures the image fits properly */
+    border-radius: 8px; /* Optional: Rounded corners */
+  }
+  
 .blog-body {
     padding: 20px;
 }
