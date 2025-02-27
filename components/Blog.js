@@ -28,16 +28,18 @@ export default function Blog() {
   return (
     <div className="container mt-5" id="blog-section">
       <h1 className="fw-bold text-center mb-4">📖 Blog</h1>
-      <div className="row">
+      <div className="row g-4">
         {blogs.map((blog, index) => (
-          <div key={index} className="col-md-4 d-flex">
+          <div key={index} className="col-12 col-sm-12 col-md-12 col-lg-4 d-flex">
             <div className={`card mb-4 shadow-sm border-0 rounded-3 overflow-hidden d-flex flex-column w-100 h-100 ${styles.cardHover}`}>
 
               {/* Image Section with Fixed Aspect Ratio */}
-              <div className="position-relative" style={{ height: "260px", width: "100%" }}>
+              {/* <div className="position-relative w-100" style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+                <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="img-fluid" />
+              </div> */}
+              <div className="position-relative" style={{ height: "260px", width: "100%", aspectRatio: "16/9", overflow: "hidden" }}>
                 <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="card-img-top" />
               </div>
-
 
               {/* Card Content */}
               <div className="card-body d-flex flex-column justify-content-between p-4 flex-grow-1">
