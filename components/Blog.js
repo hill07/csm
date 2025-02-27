@@ -30,15 +30,22 @@ export default function Blog() {
       <h1 className="fw-bold text-center mb-4">📖 Blog</h1>
       <div className="row">
         {blogs.map((blog, index) => (
-          <div key={index} className="col-md-4">
-            <div className={`card mb-4 shadow-sm border-0 rounded-3 overflow-hidden ${styles.cardHover}`}> 
+          <div key={index} className="col-md-4 d-flex">
+            <div className={`card mb-4 shadow-sm border-0 rounded-3 overflow-hidden d-flex flex-column w-100 h-100 ${styles.cardHover}`}>
+
+              {/* Image Section with Fixed Aspect Ratio */}
               <div className="position-relative" style={{ height: "260px", width: "100%" }}>
                 <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="card-img-top" />
               </div>
-              <div className="card-body text-center p-4">
-                <h5 className="card-title fw-bold fs-5">{blog.title}</h5>
-                <p className="card-text text-muted fs-6">{blog.excerpt}</p>
-                <Link href={`/blog/${blog.slug}`} className="btn btn-dark w-100 fw-semibold shadow-sm">
+
+
+              {/* Card Content */}
+              <div className="card-body d-flex flex-column justify-content-between p-4 flex-grow-1">
+                <div>
+                  <h5 className="card-title fw-bold fs-5">{blog.title}</h5>
+                  <p className="card-text text-muted fs-6">{blog.excerpt}</p>
+                </div>
+                <Link href={`/blog/${blog.slug}`} className="btn btn-dark fw-semibold shadow-sm mt-auto">
                   Read More →
                 </Link>
               </div>
@@ -46,6 +53,8 @@ export default function Blog() {
           </div>
         ))}
       </div>
+
+      {/* CSS Fixes */}
       <style jsx>{`
         .${styles.cardHover} {
           transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
