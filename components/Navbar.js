@@ -12,7 +12,13 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
       <div className="container">
-        <Link href="/" className="navbar-brand fw-bold text-white fs-4" onClick={(e) => { e.preventDefault(); // Prevents Next.js default navigation window.location.href = "/"; }} > FOREX METER </Link>
+        <Link
+          href="/"
+          className="navbar-brand fw-bold text-white fs-4"
+          onClick={() => window.location.href = "/"}
+        >
+          FOREX METER
+        </Link>
 
         <button
           className="navbar-toggler"
