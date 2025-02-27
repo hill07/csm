@@ -1,42 +1,15 @@
-import Link from "next/link";
-import Image from "next/image";
-import "bootstrap/dist/css/bootstrap.min.css";
-import styles from "../styles/Blog.module.css";
-
-const blogs = [
-  {
-    title: "How Currency Strength Meter Helps in Trading",
-    slug: "how-to-use",
-    image: "/images/currency_strength_meter.jpg",
-    excerpt: "Learn how the Currency Strength Meter helps traders analyze market strength and choose the right pairs."
-  },
-  {
-    title: "How to Take Extra Confirmation in Trades",
-    slug: "extra-confirmation-trades",
-    image: "/images/trade_confirmation_chart.jpg",
-    excerpt: "Discover advanced techniques to confirm your trade setups using multiple indicators."
-  },
-  {
-    title: "Preventing Bad Trades: Risk Management Tips",
-    slug: "prevent_bad_trades",
-    image: "/images/prevent_bad_trades.jpg",
-    excerpt: "Avoid bad trades with proper risk management techniques and maintain consistency in Forex."
-  }
-];
-
 export default function Blog() {
   return (
     <div className="container mt-5" id="blog-section">
       <h1 className="fw-bold text-center mb-4">📖 Blog</h1>
-      <div className="row g-4">
+      
+      {/* Apply `gy-4` for spacing between rows */}
+      <div className="row gy-4">
         {blogs.map((blog, index) => (
           <div key={index} className="col-12 col-sm-12 col-md-12 col-lg-4 d-flex">
             <div className={`card mb-4 shadow-sm border-0 rounded-3 overflow-hidden d-flex flex-column w-100 h-100 ${styles.cardHover}`}>
 
-              {/* Image Section with Fixed Aspect Ratio */}
-              {/* <div className="position-relative w-100" style={{ aspectRatio: "16/9", overflow: "hidden" }}>
-                <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="img-fluid" />
-              </div> */}
+              {/* Image Section with Fixed Height */}
               <div className="position-relative" style={{ height: "260px", width: "100%", aspectRatio: "16/9", overflow: "hidden" }}>
                 <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="card-img-top" />
               </div>
