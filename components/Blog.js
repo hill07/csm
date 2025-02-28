@@ -34,9 +34,13 @@ export default function Blog() {
             <div className={`card mb-4 shadow-sm border-0 rounded-3 overflow-hidden d-flex flex-column w-100 h-100 ${styles.cardHover}`}>
 
               {/* Image Section with Fixed Aspect Ratio */}
-              <div className="position-relative w-100" style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+              {/* <div className="position-relative w-100" style={{ aspectRatio: "16/9", overflow: "hidden" }}>
                 <Image src={blog.image} layout="fill" objectFit="cover" alt={blog.title} className="img-fluid p-2" />
+              </div> */}
+              <div className="position-relative w-100" style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+                <Image src={blog.image} layout="fill" objectFit="contain" alt={blog.title} className="img-fluid p-2" />
               </div>
+
 
               {/* Card Content */}
               <div className="card-body d-flex flex-column justify-content-between p-4 flex-grow-1">
