@@ -59,7 +59,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
           <OverlayTrigger placement="bottom" overlay={renderTooltip}>
             <div
               className={`spinner-grow me-2 ${marketOpen ? "text-success" : "text-danger"}`}
-              style={{ width: "12px", height: "12px", transition: "0.3s" }}
+              style={{ width: "12px", height: "12px", transition: "0.5s", animation: marketOpen ? "pulse 1s infinite" : "none" }}
             ></div>
           </OverlayTrigger>
           <button
@@ -78,7 +78,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
         </div>
       </div>
 
-      <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+      <div className="row row-cols-2 row-cols-md-4 g-3">
         {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col">
             <div className="card p-3 shadow-sm text-center border-0">
