@@ -43,6 +43,19 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     setLoading(false);
   };
 
+  // Inject keyframes for smooth animation
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes big-small {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.4); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style); // Clean up on unmount
+  }, []);
+
   const renderTooltip = (props) => (
     <Tooltip id="market-status-tooltip" {...props}>
       {marketOpen ? "Market Open" : "Market Closed"}
@@ -51,51 +64,36 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
 
   return (
     <div className="container my-4">
-      {/* <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
-        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
-        <button
-          className="btn btn-dark d-flex align-items-center"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          {loading ? (
-            <Spinner as="span" animation="border" size="sm" className="me-2" />
-          ) : (
-            <FaSync className="me-2" />
-          )}
-          Refresh
-        </button>
-      </div> */}
       <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
         <h2 className="fw-bold mb-0">Live Currency Strength</h2>
-
-        <OverlayTrigger placement="bottom" overlay={renderTooltip}>
-          <span
-            className={`rounded-circle ${marketOpen ? "bg-success" : "bg-danger"}`}
-            style={{
-              display: "inline-block",
-              width: "12px",
-              height: "12px",
-              cursor: "pointer"
-            }}
-          ></span>
-        </OverlayTrigger>
-
-
-        <button
-          className="btn btn-dark d-flex align-items-center"
-          onClick={handleRefresh}
-          disabled={loading}
-        >
-          {loading ? (
-            <Spinner as="span" animation="border" size="sm" className="me-2" />
-          ) : (
-            <FaSync className="me-2" />
-          )}
-          Refresh
-        </button>
+        <div className="d-flex align-items-center">
+          <OverlayTrigger placement="bottom" overlay={renderTooltip}>
+            <span
+              className={`rounded-circle ${marketOpen ? "bg-success" : "bg-danger"}`}
+              style={{
+                display: "inline-block",
+                width: "12px",
+                height: "12px",
+                marginRight: "10px",
+                animation: "big-small 2s infinite ease-in-out",
+                transformOrigin: "center",
+              }}
+            ></span>
+          </OverlayTrigger>
+          <button
+            className="btn btn-dark d-flex align-items-center"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? (
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+            ) : (
+              <FaSync className="me-2" />
+            )}
+            Refresh
+          </button>
+        </div>
       </div>
-
 
       <div className="row row-cols-2 row-cols-md-4 g-4 justify-content-center">
         {displayCurrencies.map(({ code, strength }) => (
