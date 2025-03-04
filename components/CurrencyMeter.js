@@ -74,7 +74,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
                 display: "inline-block",
                 width: "12px",
                 height: "12px",
-                marginRight: "10px",
+                marginRight: "15px",
                 animation: "big-small 2s infinite ease-in-out",
                 transformOrigin: "center",
               }}
