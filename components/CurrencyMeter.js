@@ -14,7 +14,6 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     const currentHour = currentTime.getUTCHours();
     const currentDay = currentTime.getUTCDay();
     const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
-
     setMarketOpen(isOpen);
 
     if (!isOpen && previousCurrencies.length > 0) {
@@ -43,7 +42,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     setLoading(false);
   };
 
-  const getBarColor = () => "bg-primary";
+  const getBarColor = () => "bg-info";
 
   const renderTooltip = (props) => (
     <Tooltip id="market-status-tooltip" {...props}>
@@ -54,7 +53,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   return (
     <div className="container text-center mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+        <h2 className="fw-bold mb-0 text-info">Live Currency Strength</h2>
         <div className="d-flex align-items-center">
           <OverlayTrigger placement="bottom" overlay={renderTooltip}>
             <div
@@ -64,7 +63,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
           </OverlayTrigger>
           <button
             className="btn text-white d-flex align-items-center"
-            style={{ backgroundColor: "#212529" }}
+            style={{ backgroundColor: "#0d6efd" }}
             onClick={handleRefresh}
             disabled={loading}
           >
@@ -81,8 +80,8 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
       <div className="row row-cols-2 row-cols-md-4 g-3">
         {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col">
-            <div className="card p-3 shadow-sm text-center border-0">
-              <h4 className="fw-bold">
+            <div className="card p-3 shadow-sm text-center border-0 rounded">
+              <h4 className="fw-bold text-info">
                 {code} {arrowDirection[code] === "up" ? <FaArrowUp className="text-success" /> : <FaArrowDown className="text-danger" />}
               </h4>
               <div className="progress mt-2">
