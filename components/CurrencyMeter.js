@@ -1,114 +1,122 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowUp, FaArrowDown, FaSync } from "react-icons/fa";
+import { Tooltip, OverlayTrigger, Spinner } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const CurrencyMeter = ({ currencies, previousCurrencies, onRefresh }) => {
+const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) => {
   const [marketOpen, setMarketOpen] = useState(false);
   const [arrowDirection, setArrowDirection] = useState({});
+  const [displayCurrencies, setDisplayCurrencies] = useState(currencies);
+  const [loading, setLoading] = useState(false);
 
-  // Check if the market is open (Monday to Friday, 00:00 - 22:00 UTC)
+  // Market Open Check (Monday to Friday, 00:00 - 22:00 UTC)
   useEffect(() => {
     const currentTime = new Date();
     const currentHour = currentTime.getUTCHours();
     const currentDay = currentTime.getUTCDay();
-    setMarketOpen(currentDay >= 1 && currentDay <= 5 && currentHour < 22);
-  }, []);
+    const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
 
-  // Update arrow directions based on currency strength changes
+    setMarketOpen(isOpen);
+
+    if (!isOpen && previousCurrencies.length > 0) {
+      setDisplayCurrencies(previousCurrencies);
+    } else {
+      setDisplayCurrencies(currencies);
+    }
+  }, [currencies, previousCurrencies]);
+
+  // Update arrow directions based on strength changes
   useEffect(() => {
     if (previousCurrencies.length > 0) {
-      let newArrows = { ...arrowDirection }; // Keep existing arrows
-
+      let newArrows = {};
       currencies.forEach(({ code, strength }) => {
         const prevCurrency = previousCurrencies.find((prev) => prev.code === code);
-
         if (prevCurrency) {
-          if (strength > prevCurrency.strength) {
-            newArrows[code] = "up"; // Show up arrow
-          } else if (strength < prevCurrency.strength) {
-            newArrows[code] = "down"; // Show down arrow
-          }
+          newArrows[code] = strength > prevCurrency.strength ? "up" : "down";
         }
       });
-
       setArrowDirection(newArrows);
     }
-  }, [currencies]);
+  }, [currencies, previousCurrencies]);
 
-  // Determine the number of bars for strength representation
-  const getBars = (strength) => {
-    if (strength >= 100) return 5;
-    if (strength >= 80) return 4;
-    if (strength >= 60) return 3;
-    if (strength >= 40) return 2;
-    return 1;
+  // Function to refresh data
+  const handleRefresh = async () => {
+    setLoading(true);
+    await fetchCurrencyData();
+    setLoading(false);
   };
 
+  // Strength bar logic with gradient
+  const getBarColor = (strength) => {
+    if (strength >= 60) return "bg-success";
+    if (strength >= 40) return "bg-warning";
+    return "bg-danger";
+  };
+
+  // Tooltip for market status
+  const renderTooltip = (props) => (
+    <Tooltip id="market-status-tooltip" {...props}>
+      {marketOpen ? "Market Open" : "Market Closed"}
+    </Tooltip>
+  );
+
   return (
-    <div className="container text-center">
-      <h2 className="fw-bold mt-4 pt-5">Live Currency Strength</h2>
-
-      <div className="d-flex justify-content-center align-items-center mb-3">
-        {/* Market Status Indicator */}
-        <div
-          className="rounded-circle me-2"
-          style={{
-            width: "12px",
-            height: "12px",
-            backgroundColor: marketOpen ? "green" : "red",
-            transition: "0.3s",
-            cursor: "pointer",
-          }}
-          title={marketOpen ? "Market Open" : "Market Closed"}
-        ></div>
-
-        {/* Refresh Button */}
-        <button
-          className="btn text-white d-flex align-items-center"
-          onClick={onRefresh}
-          style={{
-            backgroundColor: "#212529",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "5px",
-            fontSize: "16px",
-            transition: "0.3s",
-          }}
-          onMouseEnter={(e) => (e.target.style.opacity = "0.8")}
-          onMouseLeave={(e) => (e.target.style.opacity = "1")}
-        >
-          <FaSync className="me-2" /> Refresh
-        </button>
+    <div className="container text-center mt-5">
+      {/* Horizontal alignment for title, market status, and refresh button */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+        <div className="d-flex align-items-center">
+          <OverlayTrigger placement="bottom" overlay={renderTooltip}>
+            <div
+              className={`spinner-grow me-2 mf-3 ${marketOpen ? "text-success" : "text-danger"}`}
+              style={{ width: "12px", height: "12px", transition: "0.3s" }}
+            ></div>
+          </OverlayTrigger>
+          <button
+            className="btn text-white d-flex align-items-center"
+            style={{ backgroundColor: "#212529" }}
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? (
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+            ) : (
+              <FaSync className="me-2" />
+            )}
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="row">
-        {currencies.map(({ code, strength }) => (
+        {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col-md-3 col-sm-6 mb-3">
-            <div className="card p-3 shadow-sm text-center">
-              <h4 className="fw-bold">{code}</h4>
-
-              {/* Arrow Indicator */}
-              <div className="d-flex justify-content-center align-items-center">
-                {arrowDirection[code] === "up" && <FaArrowUp color="green" size={20} />}
-                {arrowDirection[code] === "down" && <FaArrowDown color="red" size={20} />}
+            <div
+              className="card p-3 shadow-sm text-center border-0"
+              style={{ transition: "transform 0.3s", cursor: "pointer" }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              <h4 className="fw-bold">
+                {code}{" "}
+                {arrowDirection[code] === "up" ? (
+                  <FaArrowUp className="text-success" />
+                ) : arrowDirection[code] === "down" ? (
+                  <FaArrowDown className="text-danger" />
+                ) : null}
+              </h4>
+              <div className="progress mt-2" style={{ height: "8px", border: "1px solid #ddd", borderRadius: "5px" }}>
+                <div
+                  className={`progress-bar ${getBarColor(strength)}`}
+                  role="progressbar"
+                  style={{
+                    width: `${strength > 0 ? Math.max(strength, 5) : 0}%`,
+                    transition: "width 0.5s",
+                    background: `linear-gradient(90deg, #00c6ff, #0072ff)`,
+                  }}
+                ></div>
               </div>
-
-              {/* Strength Bars */}
-              <div className="d-flex justify-content-center align-items-end" style={{ height: "40px", gap: "4px" }}>
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: "8px",
-                      height: `${(i + 1) * (7 + (strength / 100) * 2)}px`,
-                      backgroundColor: i < getBars(strength) ? "green" : "#ccc",
-                      borderRadius: "2px",
-                    }}
-                  ></div>
-                ))}
-              </div>
-
-              <p className="mt-2 fw-bold">Strength: {strength.toFixed(2)}%</p>
+              <p className="mt-2">Strength: {strength.toFixed(2)}%</p>
             </div>
           </div>
         ))}

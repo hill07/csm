@@ -4,20 +4,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CurrencyMeter from "../components/CurrencyMeter";
-import CurrencyPairs from "../components/CurrnecyPairs";
+import CurrencyPairs from "@/components/CurrnecyPairs";
 import BlogComponent from "@/components/Blog";
 
 export default function Home() {
   const [currencies, setCurrencies] = useState([]);
   const [previousCurrencies, setPreviousCurrencies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch currency data from the API
   const fetchCurrencyData = async () => {
-    setLoading(true);
-
     const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    const apiKey = process.env.NEXT_PUBLIC_API_KEY;
-    const apiUrl = `http://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+    //const apiKey = "7483dcc6f589ad53e5a73d1ef25bfdc9"; // Replace with your secured API Key
+    const apiKey = "a71c5105300ef7c367ff4029690524da"; // Replace with your secured API Key
+    const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
       const response = await fetch(apiUrl);
@@ -28,7 +28,6 @@ export default function Home() {
       }
 
       let rates = {};
-
       Object.entries(data.quotes).forEach(([key, value]) => {
         rates[key] = value;
         const base = key.slice(3);
@@ -68,16 +67,16 @@ export default function Home() {
         strength: ((currencyStrengths[currency] / totalStrength) * 100) || 0,
       }));
 
-      // Ensure previous values are stored before updating
-      setPreviousCurrencies((prev) => (currencies.length > 0 ? [...currencies] : prev));
+      setPreviousCurrencies([...currencies]);
       setCurrencies(normalizedStrengths);
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error("Error fetching currencies:", error);
-    } finally {
-      setLoading(false);
+      setError("Failed to fetch currency data. Please try again later.");
     }
   };
 
+  // Fetch currency data on mount and every 10 seconds
   useEffect(() => {
     fetchCurrencyData();
     const interval = setInterval(fetchCurrencyData, 10000);
@@ -88,10 +87,7 @@ export default function Home() {
     <div className="bg-light">
       <Head>
         <title>Forex Meter - Live Currency Strength</title>
-        <meta
-          name="description"
-          content="Track live currency strength for Forex trading and improve your trading strategies with real-time data."
-        />
+        <meta name="description" content="Track live currency strength for Forex trading with real-time data." />
       </Head>
 
       <Navbar />
@@ -100,8 +96,16 @@ export default function Home() {
         <div className="row">
           <aside className="col-lg-2 d-none d-lg-block p-3 text-center"></aside>
 
-          <main className="col-lg-8 col-md-12 text-center py-4">
-            <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} loading={loading} />
+          <main className="col-lg-8 col-md-12 text-center py- mt-5">
+            {error ? (
+              <div className="alert alert-danger">{error}</div>
+            ) : (
+              <CurrencyMeter
+                fetchCurrencyData={fetchCurrencyData}
+                currencies={currencies}
+                previousCurrencies={previousCurrencies}
+              />
+            )}
             <CurrencyPairs />
             <BlogComponent />
           </main>
