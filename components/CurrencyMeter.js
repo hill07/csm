@@ -14,6 +14,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     const currentHour = currentTime.getUTCHours();
     const currentDay = currentTime.getUTCDay();
     const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
+
     setMarketOpen(isOpen);
 
     if (!isOpen && previousCurrencies.length > 0) {
@@ -42,8 +43,6 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     setLoading(false);
   };
 
-  const getBarColor = () => "bg-info";
-
   const renderTooltip = (props) => (
     <Tooltip id="market-status-tooltip" {...props}>
       {marketOpen ? "Market Open" : "Market Closed"}
@@ -53,40 +52,31 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   return (
     <div className="container text-center mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold mb-0 text-info">Live Currency Strength</h2>
-        <div className="d-flex align-items-center">
-          <OverlayTrigger placement="bottom" overlay={renderTooltip}>
-            <div
-              className={`spinner-grow me-2 ${marketOpen ? "text-success" : "text-danger"}`}
-              style={{ width: "12px", height: "12px", transition: "0.5s", animation: marketOpen ? "pulse 1s infinite" : "none" }}
-            ></div>
-          </OverlayTrigger>
-          <button
-            className="btn text-white d-flex align-items-center"
-            style={{ backgroundColor: "#0d6efd" }}
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            {loading ? (
-              <Spinner as="span" animation="border" size="sm" className="me-2" />
-            ) : (
-              <FaSync className="me-2" />
-            )}
-            Refresh
-          </button>
-        </div>
+        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+        <button
+          className="btn btn-dark d-flex align-items-center"
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          {loading ? (
+            <Spinner as="span" animation="border" size="sm" className="me-2" />
+          ) : (
+            <FaSync className="me-2" />
+          )}
+          Refresh
+        </button>
       </div>
 
       <div className="row row-cols-2 row-cols-md-4 g-3">
         {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col">
-            <div className="card p-3 shadow-sm text-center border-0 rounded">
-              <h4 className="fw-bold text-info">
+            <div className="card p-3 text-center border-0">
+              <h4 className="fw-bold">
                 {code} {arrowDirection[code] === "up" ? <FaArrowUp className="text-success" /> : <FaArrowDown className="text-danger" />}
               </h4>
               <div className="progress mt-2">
                 <div
-                  className={`progress-bar ${getBarColor()}`}
+                  className="progress-bar bg-primary"
                   role="progressbar"
                   style={{ width: `${strength}%`, transition: "width 0.5s" }}
                 ></div>
