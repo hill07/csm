@@ -50,9 +50,38 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   );
 
   return (
-    <div className="container text-center mt-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="container my-4">
+      {/* <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
         <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+        <button
+          className="btn btn-dark d-flex align-items-center"
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          {loading ? (
+            <Spinner as="span" animation="border" size="sm" className="me-2" />
+          ) : (
+            <FaSync className="me-2" />
+          )}
+          Refresh
+        </button>
+      </div> */}
+      <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
+        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+
+        <OverlayTrigger placement="bottom" overlay={renderTooltip}>
+          <span
+            className={`rounded-circle ${marketOpen ? "bg-success" : "bg-danger"}`}
+            style={{
+              display: "inline-block",
+              width: "12px",
+              height: "12px",
+              cursor: "pointer"
+            }}
+          ></span>
+        </OverlayTrigger>
+
+
         <button
           className="btn btn-dark d-flex align-items-center"
           onClick={handleRefresh}
@@ -67,21 +96,29 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
         </button>
       </div>
 
-      <div className="row row-cols-2 row-cols-md-4 g-3">
+
+      <div className="row row-cols-2 row-cols-md-4 g-4 justify-content-center">
         {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col">
-            <div className="card p-3 text-center border-0">
-              <h4 className="fw-bold">
-                {code} {arrowDirection[code] === "up" ? <FaArrowUp className="text-success" /> : <FaArrowDown className="text-danger" />}
-              </h4>
-              <div className="progress mt-2">
-                <div
-                  className="progress-bar bg-primary"
-                  role="progressbar"
-                  style={{ width: `${strength}%`, transition: "width 0.5s" }}
-                ></div>
+            <div className="card text-center border-light shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title">
+                  {code}{" "}
+                  {arrowDirection[code] === "up" ? (
+                    <FaArrowUp className="text-success" />
+                  ) : (
+                    <FaArrowDown className="text-danger" />
+                  )}
+                </h5>
+                <div className="progress mb-2" style={{ height: "8px" }}>
+                  <div
+                    className="progress-bar bg-primary"
+                    role="progressbar"
+                    style={{ width: `${strength}%`, transition: "width 0.5s" }}
+                  ></div>
+                </div>
+                <p className="card-text">Strength: {strength.toFixed(2)}%</p>
               </div>
-              <p className="mt-2">Strength: {strength.toFixed(2)}%</p>
             </div>
           </div>
         ))}
