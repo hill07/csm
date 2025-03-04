@@ -6,16 +6,17 @@ import Footer from "../components/Footer";
 import CurrencyMeter from "../components/CurrencyMeter";
 import CurrencyPairs from "@/components/CurrnecyPairs";
 import BlogComponent from "@/components/Blog";
+import Opportunities from "@/components/Opportunities";
 
 export default function Home() {
   const [currencies, setCurrencies] = useState([]);
   const [previousCurrencies, setPreviousCurrencies] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
 
   // Fetch currency data from the API
   const fetchCurrencyData = async () => {
     const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    //const apiKey = "7483dcc6f589ad53e5a73d1ef25bfdc9"; // Replace with your secured API Key
     const apiKey = "a71c5105300ef7c367ff4029690524da"; // Replace with your secured API Key
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
@@ -62,6 +63,11 @@ export default function Home() {
         }
       });
 
+      // Fix for USD showing 0.00% strength
+      if (totalStrength > 0) {
+        currencyStrengths["USD"] = totalStrength / 7; // Average strength for USD
+      }
+
       let normalizedStrengths = baseCurrencies.map((currency) => ({
         code: currency,
         strength: ((currencyStrengths[currency] / totalStrength) * 100) || 0,
@@ -76,12 +82,46 @@ export default function Home() {
     }
   };
 
-  // Fetch currency data on mount and every 10 seconds
+  // Calculate trading opportunities
+  const calculateOpportunities = () => {
+    if (currencies.length === 0) return;
+
+    const pairs = [
+      { pair: "EURUSD", base: "EUR", quote: "USD" },
+      { pair: "GBPUSD", base: "GBP", quote: "USD" },
+      { pair: "AUDUSD", base: "AUD", quote: "USD" },
+      { pair: "NZDUSD", base: "NZD", quote: "USD" },
+      { pair: "USDJPY", base: "USD", quote: "JPY" },
+      { pair: "USDCHF", base: "USD", quote: "CHF" },
+      { pair: "USDCAD", base: "USD", quote: "CAD" },
+      { pair: "GBPJPY", base: "GBP", quote: "JPY" }, // New Pair
+    ];
+
+    const newOpportunities = pairs.map(({ pair, base, quote }) => {
+      const baseStrength = currencies.find((c) => c.code === base)?.strength || 0;
+      const quoteStrength = currencies.find((c) => c.code === quote)?.strength || 0;
+
+      if (baseStrength > quoteStrength) {
+        return { pair, type: "buy" };
+      } else if (baseStrength < quoteStrength) {
+        return { pair, type: "sell" };
+      } else {
+        return { pair, type: "neutral" };
+      }
+    });
+
+    setOpportunities(newOpportunities);
+  };
+
   useEffect(() => {
     fetchCurrencyData();
     const interval = setInterval(fetchCurrencyData, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    calculateOpportunities();
+  }, [currencies]);
 
   return (
     <div className="bg-light">
@@ -106,6 +146,7 @@ export default function Home() {
                 previousCurrencies={previousCurrencies}
               />
             )}
+            <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
             <BlogComponent />
           </main>
