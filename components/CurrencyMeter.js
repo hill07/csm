@@ -9,18 +9,21 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   const [displayCurrencies, setDisplayCurrencies] = useState(currencies);
   const [loading, setLoading] = useState(false);
 
+  // Fix for hydration error
   useEffect(() => {
-    const currentTime = new Date();
-    const currentHour = currentTime.getUTCHours();
-    const currentDay = currentTime.getUTCDay();
-    const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
+    if (typeof window !== "undefined") {
+      const currentTime = new Date();
+      const currentHour = currentTime.getUTCHours();
+      const currentDay = currentTime.getUTCDay();
+      const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
 
-    setMarketOpen(isOpen);
+      setMarketOpen(isOpen);
 
-    if (!isOpen && previousCurrencies.length > 0) {
-      setDisplayCurrencies(previousCurrencies);
-    } else {
-      setDisplayCurrencies(currencies);
+      if (!isOpen && previousCurrencies.length > 0) {
+        setDisplayCurrencies(previousCurrencies);
+      } else {
+        setDisplayCurrencies(currencies);
+      }
     }
   }, [currencies, previousCurrencies]);
 
@@ -74,14 +77,14 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
                 display: "inline-block",
                 width: "12px",
                 height: "12px",
-                marginRight: "15px",
+                marginRight: "10px",
                 animation: "big-small 2s infinite ease-in-out",
                 transformOrigin: "center",
               }}
             ></span>
           </OverlayTrigger>
           <button
-            className="btn btn-dark d-flex align-items-center"
+            className="btn btn-dark d-flex align-items-center ms-3"
             onClick={handleRefresh}
             disabled={loading}
           >
