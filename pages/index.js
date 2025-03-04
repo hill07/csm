@@ -17,7 +17,7 @@ export default function Home() {
   // Fetch currency data from the API
   const fetchCurrencyData = async () => {
     const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    const apiKey = "7f47718f224508474af328c9402a0e5b"; // Replace with your secured API Key
+    const apiKey = "0341bfca1e0a4fdccf275f6d318a7f86"; // Replace with your secured API Key
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
