@@ -17,7 +17,7 @@ export default function Home() {
   // Fetch currency data from the API
   const fetchCurrencyData = async () => {
     const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    const apiKey = "0341bfca1e0a4fdccf275f6d318a7f86"; // Replace with your secured API Key
+    const apiKey = "9a9f3fc0520af494872918927572bc09";
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
@@ -63,9 +63,8 @@ export default function Home() {
         }
       });
 
-      // Fix for USD showing 0.00% strength
       if (totalStrength > 0) {
-        currencyStrengths["USD"] = totalStrength / 7; // Average strength for USD
+        currencyStrengths["USD"] = totalStrength / 7;
       }
 
       let normalizedStrengths = baseCurrencies.map((currency) => ({
@@ -75,14 +74,13 @@ export default function Home() {
 
       setPreviousCurrencies([...currencies]);
       setCurrencies(normalizedStrengths);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error("Error fetching currencies:", error);
       setError("Failed to fetch currency data. Please try again later.");
     }
   };
 
-  // Calculate trading opportunities
   const calculateOpportunities = () => {
     if (currencies.length === 0) return;
 
@@ -94,7 +92,7 @@ export default function Home() {
       { pair: "USDJPY", base: "USD", quote: "JPY" },
       { pair: "USDCHF", base: "USD", quote: "CHF" },
       { pair: "USDCAD", base: "USD", quote: "CAD" },
-      { pair: "GBPJPY", base: "GBP", quote: "JPY" }, // New Pair
+      { pair: "GBPJPY", base: "GBP", quote: "JPY" },
     ];
 
     const newOpportunities = pairs.map(({ pair, base, quote }) => {
@@ -134,9 +132,25 @@ export default function Home() {
 
       <div className="container-fluid">
         <div className="row">
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center"></aside>
+          {/* Left Ad Space */}
+          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
+            <div className="mb-4">
+              {/* <h6 className="bg-dark text-light py-1">Ad Space</h6> */}
+              <div className="bg-light border rounded p-2">
+                {/* <p>Your Ad Here</p> */}
+              </div>
+            </div>
+          </aside>
 
           <main className="col-lg-8 col-md-12 text-center py- mt-5">
+            {/* Mobile Ad Space - Above Main Content */}
+            <div className="d-lg-none mb-4">
+              <h6 className="bg-dark text-light py-1">Ad Space</h6>
+              <div className="bg-light border rounded p-2">
+                <p>Your Ad Here</p>
+              </div>
+            </div>
+
             {error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
@@ -149,9 +163,25 @@ export default function Home() {
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
             <BlogComponent />
+
+            {/* Mobile Ad Space - Below Main Content */}
+            <div className="d-lg-none mb-4">
+              <h6 className="bg-dark text-light py-1">Ad Space</h6>
+              <div className="bg-light border rounded p-2">
+                <p>Your Ad Here</p>
+              </div>
+            </div>
           </main>
 
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center"></aside>
+          {/* Right Ad Space */}
+          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
+            <div className="mb-4">
+              <h6 className="bg-dark text-light py-1">Ad Space</h6>
+              <div className="bg-light border rounded p-2">
+                {/* <p>Your Ad Here</p> */}
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
