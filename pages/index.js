@@ -1,191 +1,149 @@
-import { useState, useEffect } from "react";
-import Head from "next/head";
+import React, { useState, useEffect } from "react";
+import { FaArrowUp, FaArrowDown, FaSync } from "react-icons/fa";
+import { Tooltip, OverlayTrigger, Spinner } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import CurrencyMeter from "../components/CurrencyMeter";
-import CurrencyPairs from "@/components/CurrnecyPairs";
-import BlogComponent from "@/components/Blog";
-import Opportunities from "@/components/Opportunities";
 
-export default function Home() {
-  const [currencies, setCurrencies] = useState([]);
-  const [previousCurrencies, setPreviousCurrencies] = useState([]);
-  const [opportunities, setOpportunities] = useState([]);
-  const [error, setError] = useState(null);
+const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) => {
+  const [marketOpen, setMarketOpen] = useState(false);
+  const [arrowDirection, setArrowDirection] = useState({});
+  const [displayCurrencies, setDisplayCurrencies] = useState(currencies);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch currency data from the API
-  const fetchCurrencyData = async () => {
-    const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    const apiKey = "9a9f3fc0520af494872918927572bc09";
-    const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+  // Fix for hydration error
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const currentTime = new Date();
+      const currentHour = currentTime.getUTCHours();
+      const currentDay = currentTime.getUTCDay();
+      const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
 
-    try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
+      setMarketOpen(isOpen);
 
-      if (!data.success || !data.quotes) {
-        throw new Error("API fetch failed");
+      if (!isOpen && previousCurrencies.length > 0) {
+        setDisplayCurrencies(previousCurrencies);
+      } else {
+        setDisplayCurrencies(currencies);
       }
+    }
+  }, [currencies, previousCurrencies]);
 
-      let rates = {};
-      Object.entries(data.quotes).forEach(([key, value]) => {
-        rates[key] = value;
-        const base = key.slice(3);
-        rates[`${base}USD`] = 1 / value;
-      });
-
-      let currencyStrengths = {};
-      let totalStrength = 0;
-
-      baseCurrencies.forEach((currency) => {
-        let sumRates = 0;
-        let count = 0;
-
-        baseCurrencies.forEach((other) => {
-          if (currency !== other) {
-            const pair = `${currency}USD`;
-            const inversePair = `USD${currency}`;
-
-            if (rates[pair]) {
-              sumRates += rates[pair];
-              count++;
-            } else if (rates[inversePair]) {
-              sumRates += 1 / rates[inversePair];
-              count++;
-            }
-          }
-        });
-
-        if (count > 0) {
-          currencyStrengths[currency] = sumRates / count;
-          totalStrength += currencyStrengths[currency];
+  useEffect(() => {
+    if (previousCurrencies.length > 0) {
+      let newArrows = {};
+      currencies.forEach(({ code, strength }) => {
+        const prevCurrency = previousCurrencies.find((prev) => prev.code === code);
+        if (prevCurrency) {
+          newArrows[code] = strength > prevCurrency.strength ? "up" : "down";
         }
       });
-
-      if (totalStrength > 0) {
-        currencyStrengths["USD"] = totalStrength / 7;
-      }
-
-      let normalizedStrengths = baseCurrencies.map((currency) => ({
-        code: currency,
-        strength: ((currencyStrengths[currency] / totalStrength) * 100) || 0,
-      }));
-
-      setPreviousCurrencies([...currencies]);
-      setCurrencies(normalizedStrengths);
-      setError(null);
-    } catch (error) {
-      console.error("Error fetching currencies:", error);
-      setError("Failed to fetch currency data. Please try again later.");
+      setArrowDirection(newArrows);
     }
+  }, [currencies, previousCurrencies]);
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    await fetchCurrencyData();
+    setLoading(false);
   };
 
-  const calculateOpportunities = () => {
-    if (currencies.length === 0) return;
-
-    const pairs = [
-      { pair: "EURUSD", base: "EUR", quote: "USD" },
-      { pair: "GBPUSD", base: "GBP", quote: "USD" },
-      { pair: "AUDUSD", base: "AUD", quote: "USD" },
-      { pair: "NZDUSD", base: "NZD", quote: "USD" },
-      { pair: "USDJPY", base: "USD", quote: "JPY" },
-      { pair: "USDCHF", base: "USD", quote: "CHF" },
-      { pair: "USDCAD", base: "USD", quote: "CAD" },
-      { pair: "GBPJPY", base: "GBP", quote: "JPY" },
-    ];
-
-    const newOpportunities = pairs.map(({ pair, base, quote }) => {
-      const baseStrength = currencies.find((c) => c.code === base)?.strength || 0;
-      const quoteStrength = currencies.find((c) => c.code === quote)?.strength || 0;
-
-      if (baseStrength > quoteStrength) {
-        return { pair, type: "buy" };
-      } else if (baseStrength < quoteStrength) {
-        return { pair, type: "sell" };
-      } else {
-        return { pair, type: "neutral" };
-      }
-    });
-
-    setOpportunities(newOpportunities);
-  };
-
+  // Inject keyframes for smooth animation
   useEffect(() => {
-    fetchCurrencyData();
-    const interval = setInterval(fetchCurrencyData, 10000);
-    return () => clearInterval(interval);
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes big-small {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.4); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
   }, []);
 
-  useEffect(() => {
-    calculateOpportunities();
-  }, [currencies]);
+  const renderTooltip = (props) => (
+    <Tooltip id="market-status-tooltip" {...props}>
+      {marketOpen ? "Market Open" : "Market Closed"}
+    </Tooltip>
+  );
 
   return (
-    <div className="bg-light">
-      <Head>
-        <title>Forex Meter - Live Currency Strength</title>
-        <meta name="description" content="Track live currency strength for Forex trading with real-time data." />
-      </Head>
-
-      <Navbar />
-
-      <div className="container-fluid">
-        <div className="row">
-          {/* Left Ad Space */}
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
-            <div className="mb-4">
-              {/* <h6 className="bg-dark text-light py-1">Ad Space</h6> */}
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
-          </aside>
-
-          <main className="col-lg-8 col-md-12 text-center py- mt-5">
-            {/* Mobile Ad Space - Above Main Content */}
-            <div className="d-lg-none mb-4">
-              <h6 className="bg-dark text-light py-1">Ad Space</h6>
-              <div className="bg-light border rounded p-2">
-                <p>Your Ad Here</p>
-              </div>
-            </div>
-
-            {error ? (
-              <div className="alert alert-danger">{error}</div>
-            ) : (
-              <CurrencyMeter
-                fetchCurrencyData={fetchCurrencyData}
-                currencies={currencies}
-                previousCurrencies={previousCurrencies}
-              />
-            )}
-            <Opportunities opportunities={opportunities} />
-            <CurrencyPairs />
-            <BlogComponent />
-
-            {/* Mobile Ad Space - Below Main Content */}
-            <div className="d-lg-none mb-4">
-              <h6 className="bg-dark text-light py-1">Ad Space</h6>
-              <div className="bg-light border rounded p-2">
-                <p>Your Ad Here</p>
-              </div>
-            </div>
-          </main>
-
-          {/* Right Ad Space */}
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
-            <div className="mb-4">
-              <h6 className="bg-dark text-light py-1">Ad Space</h6>
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
-          </aside>
+    <div className="container my-4">
+      {/* Mobile Ad Space - Above Currency Meter */}
+      <div className="d-lg-none mb-4">
+        <h6 className="bg-dark text-light py-1">Ad Space</h6>
+        <div className="bg-light border rounded p-2 text-center">
+          {/* <p>Your Ad Here</p> */}
         </div>
       </div>
 
-      <Footer />
+      <div className="d-flex justify-content-between align-items-center mb-4 mt-3">
+        <h2 className="fw-bold mb-0">Live Currency Strength</h2>
+        <div className="d-flex align-items-center">
+          <OverlayTrigger placement="bottom" overlay={renderTooltip}>
+            <span
+              className={`rounded-circle ${marketOpen ? "bg-success" : "bg-danger"}`}
+              style={{
+                display: "inline-block",
+                width: "12px",
+                height: "12px",
+                marginRight: "10px",
+                animation: "big-small 2s infinite ease-in-out",
+                transformOrigin: "center",
+              }}
+            ></span>
+          </OverlayTrigger>
+          <button
+            className="btn btn-dark d-flex align-items-center ms-3"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? (
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+            ) : (
+              <FaSync className="me-2" />
+            )}
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div className="row row-cols-2 row-cols-md-4 g-3 justify-content-center">
+        {displayCurrencies.map(({ code, strength }) => (
+          <div key={code} className="col">
+            <div className="card text-center border-light shadow-sm rounded-3">
+              <div className="card-body">
+                <h6 className="card-title mb-1">
+                  {code}{" "}
+                  {arrowDirection[code] === "up" ? (
+                    <FaArrowUp className="text-success" />
+                  ) : (
+                    <FaArrowDown className="text-danger" />
+                  )}
+                </h6>
+                <div className="progress mb-2" style={{ height: "6px" }}>
+                  <div
+                    className="progress-bar bg-primary"
+                    role="progressbar"
+                    style={{ width: `${strength}%`, transition: "width 0.5s" }}
+                  ></div>
+                </div>
+                <p className="card-text" style={{ fontSize: "0.85rem" }}>
+                  Strength: {strength.toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile Ad Space - Below Currency Meter */}
+      <div className="d-lg-none mt-4">
+        <h6 className="bg-dark text-light py-1">Ad Space</h6>
+        <div className="bg-light border rounded p-2 text-center">
+          {/* <p>Your Ad Here</p> */}
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default CurrencyMeter;
