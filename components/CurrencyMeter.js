@@ -56,7 +56,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
       }
     `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style);
+    return () => document.head.removeChild(style); // Clean up on unmount
   }, []);
 
   const renderTooltip = (props) => (
@@ -67,15 +67,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
 
   return (
     <div className="container my-4">
-      {/* Mobile Ad Space - Above Currency Meter */}
-      <div className="d-lg-none mb-4">
-        <h6 className="bg-dark text-light py-1">Ad Space</h6>
-        <div className="bg-light border rounded p-2 text-center">
-          <p>Your Ad Here</p>
-        </div>
-      </div>
-
-      <div className="d-flex justify-content-between align-items-center mb-4 mt-3">
+      <div className="d-flex justify-content-between align-items-center mb-4 mt-5">
         <h2 className="fw-bold mb-0">Live Currency Strength</h2>
         <div className="d-flex align-items-center">
           <OverlayTrigger placement="bottom" overlay={renderTooltip}>
@@ -106,41 +98,31 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
         </div>
       </div>
 
-      <div className="row row-cols-2 row-cols-md-4 g-3 justify-content-center">
+      <div className="row row-cols-2 row-cols-md-4 g-4 justify-content-center">
         {displayCurrencies.map(({ code, strength }) => (
           <div key={code} className="col">
-            <div className="card text-center border-light shadow-sm rounded-3">
+            <div className="card text-center border-light shadow-sm">
               <div className="card-body">
-                <h6 className="card-title mb-1">
+                <h5 className="card-title">
                   {code}{" "}
                   {arrowDirection[code] === "up" ? (
                     <FaArrowUp className="text-success" />
                   ) : (
                     <FaArrowDown className="text-danger" />
                   )}
-                </h6>
-                <div className="progress mb-2" style={{ height: "6px" }}>
+                </h5>
+                <div className="progress mb-2" style={{ height: "8px" }}>
                   <div
                     className="progress-bar bg-primary"
                     role="progressbar"
                     style={{ width: `${strength}%`, transition: "width 0.5s" }}
                   ></div>
                 </div>
-                <p className="card-text" style={{ fontSize: "0.85rem" }}>
-                  Strength: {strength.toFixed(2)}%
-                </p>
+                <p className="card-text">Strength: {strength.toFixed(2)}%</p>
               </div>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Mobile Ad Space - Below Currency Meter */}
-      <div className="d-lg-none mt-4">
-        <h6 className="bg-dark text-light py-1">Ad Space</h6>
-        <div className="bg-light border rounded p-2 text-center">
-          <p>Your Ad Here</p>
-        </div>
       </div>
     </div>
   );
