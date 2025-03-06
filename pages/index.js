@@ -1,23 +1,31 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import CurrencyMeter from "../components/CurrencyMeter";
-import CurrencyPairs from "@/components/CurrnecyPairs";
 import BlogComponent from "@/components/Blog";
-import Opportunities from "@/components/Opportunities";
+
+// Dynamically import components that use `window` or `document` to avoid SSR issues
+const CurrencyMeter = dynamic(() => import("../components/CurrencyMeter"), { ssr: false });
+const CurrencyPairs = dynamic(() => import("../components/CurrnecyPairs"), { ssr: false });
+const Opportunities = dynamic(() => import("../components/Opportunities"), { ssr: false });
 
 export default function Home() {
   const [currencies, setCurrencies] = useState([]);
   const [previousCurrencies, setPreviousCurrencies] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Fetch currency data from the API
+  // Ensure component only renders on the client-side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const fetchCurrencyData = async () => {
     const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-    const apiKey = "9a9f3fc0520af494872918927572bc09";
+    const apiKey = "67a7722a2201bd923cd95f93017ccd80";
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
@@ -121,6 +129,10 @@ export default function Home() {
     calculateOpportunities();
   }, [currencies]);
 
+  if (!isClient) {
+    return null;  // Prevent SSR mismatch by avoiding rendering until on the client
+  }
+
   return (
     <div className="bg-light">
       <Head>
@@ -132,25 +144,7 @@ export default function Home() {
 
       <div className="container-fluid">
         <div className="row">
-          {/* Left Ad Space */}
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
-            <div className="mb-4">
-              {/* <h6 className="bg-dark text-light py-1">Ad Space</h6> */}
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
-          </aside>
-
-          <main className="col-lg-8 col-md-12 text-center py- mt-5">
-            {/* Mobile Ad Space - Above Main Content */}
-            <div className="d-lg-none mb-4">
-              {/* <h6 className="bg-dark text-light py-1">Ad Space</h6> */}
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
-
+          <main className="col-lg-8 col-md-12 text-center py- mt-5 mx-auto">
             {error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
@@ -163,25 +157,7 @@ export default function Home() {
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
             <BlogComponent />
-
-            {/* Mobile Ad Space - Below Main Content */}
-            <div className="d-lg-none mb-4">
-              <h6 className="bg-dark text-light py-1">Ad Space</h6>
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
           </main>
-
-          {/* Right Ad Space */}
-          <aside className="col-lg-2 d-none d-lg-block p-3 text-center">
-            <div className="mb-4">
-              <h6 className="bg-dark text-light py-1">Ad Space</h6>
-              <div className="bg-light border rounded p-2">
-                {/* <p>Your Ad Here</p> */}
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
 
