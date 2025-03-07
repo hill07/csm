@@ -1,122 +1,46 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import dynamic from "next/dynamic";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import CurrencyMeter from "../components/CurrencyMeter";
+import CurrencyPairs from "@/components/CurrnecyPairs";
 import BlogComponent from "@/components/Blog";
-
-// Dynamically import components that use `window` or `document` to avoid SSR issues
-const CurrencyMeter = dynamic(() => import("../components/CurrencyMeter"), { ssr: false });
-const CurrencyPairs = dynamic(() => import("../components/CurrnecyPairs"), { ssr: false });
-const Opportunities = dynamic(() => import("../components/Opportunities"), { ssr: false });
+import Opportunities from "@/components/Opportunities";
 
 export default function Home() {
   const [currencies, setCurrencies] = useState([]);
   const [previousCurrencies, setPreviousCurrencies] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
-  const [isClient, setIsClient] = useState(false);
-
-  // Ensure component only renders on the client-side
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const fetchCurrencyData = async () => {
-    const baseCurrencies = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
     const apiKey = "67a7722a2201bd923cd95f93017ccd80";
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
       const response = await fetch(apiUrl);
       const data = await response.json();
-
-      if (!data.success || !data.quotes) {
-        throw new Error("API fetch failed");
-      }
+      if (!data.success || !data.quotes) throw new Error("API fetch failed");
 
       let rates = {};
       Object.entries(data.quotes).forEach(([key, value]) => {
         rates[key] = value;
-        const base = key.slice(3);
-        rates[`${base}USD`] = 1 / value;
+        rates[`${key.slice(3)}USD`] = 1 / value;
       });
 
-      let currencyStrengths = {};
-      let totalStrength = 0;
-
-      baseCurrencies.forEach((currency) => {
-        let sumRates = 0;
-        let count = 0;
-
-        baseCurrencies.forEach((other) => {
-          if (currency !== other) {
-            const pair = `${currency}USD`;
-            const inversePair = `USD${currency}`;
-
-            if (rates[pair]) {
-              sumRates += rates[pair];
-              count++;
-            } else if (rates[inversePair]) {
-              sumRates += 1 / rates[inversePair];
-              count++;
-            }
-          }
-        });
-
-        if (count > 0) {
-          currencyStrengths[currency] = sumRates / count;
-          totalStrength += currencyStrengths[currency];
-        }
-      });
-
-      if (totalStrength > 0) {
-        currencyStrengths["USD"] = totalStrength / 7;
-      }
-
-      let normalizedStrengths = baseCurrencies.map((currency) => ({
+      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => ({
         code: currency,
-        strength: ((currencyStrengths[currency] / totalStrength) * 100) || 0,
+        strength: ((rates[`${currency}USD`] ?? 0) / 8) * 100 || 0,
       }));
 
       setPreviousCurrencies([...currencies]);
       setCurrencies(normalizedStrengths);
       setError(null);
     } catch (error) {
-      console.error("Error fetching currencies:", error);
-      setError("Failed to fetch currency data. Please try again later.");
+      console.error("Error:", error);
+      setError("Failed to fetch currency data.");
     }
-  };
-
-  const calculateOpportunities = () => {
-    if (currencies.length === 0) return;
-
-    const pairs = [
-      { pair: "EURUSD", base: "EUR", quote: "USD" },
-      { pair: "GBPUSD", base: "GBP", quote: "USD" },
-      { pair: "AUDUSD", base: "AUD", quote: "USD" },
-      { pair: "NZDUSD", base: "NZD", quote: "USD" },
-      { pair: "USDJPY", base: "USD", quote: "JPY" },
-      { pair: "USDCHF", base: "USD", quote: "CHF" },
-      { pair: "USDCAD", base: "USD", quote: "CAD" },
-      { pair: "GBPJPY", base: "GBP", quote: "JPY" },
-    ];
-
-    const newOpportunities = pairs.map(({ pair, base, quote }) => {
-      const baseStrength = currencies.find((c) => c.code === base)?.strength || 0;
-      const quoteStrength = currencies.find((c) => c.code === quote)?.strength || 0;
-
-      if (baseStrength > quoteStrength) {
-        return { pair, type: "buy" };
-      } else if (baseStrength < quoteStrength) {
-        return { pair, type: "sell" };
-      } else {
-        return { pair, type: "neutral" };
-      }
-    });
-
-    setOpportunities(newOpportunities);
   };
 
   useEffect(() => {
@@ -125,39 +49,80 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    calculateOpportunities();
-  }, [currencies]);
-
-  if (!isClient) {
-    return null;  // Prevent SSR mismatch by avoiding rendering until on the client
-  }
-
   return (
     <div className="bg-light">
       <Head>
         <title>Forex Meter - Live Currency Strength</title>
-        <meta name="description" content="Track live currency strength for Forex trading with real-time data." />
+        <meta name="description" content="Track live currency strength for Forex trading." />
       </Head>
 
       <Navbar />
 
       <div className="container-fluid">
         <div className="row">
-          <main className="col-lg-8 col-md-12 text-center py- mt-5 mx-auto">
+          {/* Left AD - Fixed for Desktop */}
+          <aside className="d-none d-lg-block">
+            <div
+              className="bg-light border rounded shadow"
+              style={{
+                position: "fixed",
+                left: "20px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                maxWidth: "160px",
+              }}
+            >
+              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
+            </div>
+          </aside>
+
+          <main className="col-lg-8 col-md-12 text-center py-4 mt-3 mx-auto">
+            {/* Top AD for Mobile */}
+            <div className="d-lg-none mb-3 text-center">
+              <img
+                src="/images/download.jpeg"
+                alt="Ad"
+                className="img-fluid rounded shadow-sm"
+                style={{ maxWidth: "90%", margin: "0 auto" }}
+              />
+            </div>
+
             {error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
-              <CurrencyMeter
-                fetchCurrencyData={fetchCurrencyData}
-                currencies={currencies}
-                previousCurrencies={previousCurrencies}
-              />
+              <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} />
             )}
+
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
             <BlogComponent />
+
+            {/* Bottom AD for Mobile */}
+            <div className="d-lg-none mt-3 text-center">
+              <img
+                src="/images/download.jpeg"
+                alt="Ad"
+                className="img-fluid rounded shadow-sm"
+                style={{ maxWidth: "90%", margin: "0 auto" }}
+              />
+            </div>
           </main>
+
+          {/* Right AD - Fixed for Desktop */}
+          <aside className="d-none d-lg-block">
+            <div
+              className="bg-light border rounded shadow"
+              style={{
+                position: "fixed",
+                right: "20px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                maxWidth: "160px",
+              }}
+            >
+              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
+            </div>
+          </aside>
         </div>
       </div>
 
