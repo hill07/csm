@@ -15,7 +15,7 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   const fetchCurrencyData = async () => {
-    const apiKey = "67a7722a2201bd923cd95f93017ccd80";
+    const apiKey = "6b346cc441a1c8d86c7232d36e876669";
     const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
     try {
@@ -37,6 +37,18 @@ export default function Home() {
       setPreviousCurrencies([...currencies]);
       setCurrencies(normalizedStrengths);
       setError(null);
+
+      // 📌 Calculate Opportunities
+      const newOpportunities = [];
+      normalizedStrengths.forEach((currency) => {
+        if (currency.strength > 1) {  // Example condition for Buy
+          newOpportunities.push({ pair: `${currency.code}/USD`, type: "buy" });
+        } else if (currency.strength < 2) {  // Example condition for Sell
+          newOpportunities.push({ pair: `${currency.code}/USD`, type: "sell" });
+        }
+      });
+      setOpportunities(newOpportunities);  // 📌 Update opportunities state
+
     } catch (error) {
       console.error("Error:", error);
       setError("Failed to fetch currency data.");
@@ -90,8 +102,20 @@ export default function Home() {
             {error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
-              <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} />
-            )}
+              <CurrencyMeter
+                currencies={currencies}
+                previousCurrencies={previousCurrencies}
+                fetchCurrencyData={fetchCurrencyData}
+              />
+            )}{/* Top AD for Mobile */}
+            <div className="d-lg-none mb-3 text-center">
+              <img
+                src="/images/download.jpeg"
+                alt="Ad"
+                className="img-fluid rounded shadow-sm"
+                style={{ maxWidth: "90%", margin: "0 auto" }}
+              />
+            </div>
 
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
