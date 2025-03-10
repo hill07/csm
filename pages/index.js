@@ -16,7 +16,14 @@ export default function Home() {
 
   const apiKey = "e0ecc8f09bbc2042a70f1e67b737f593";
   const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
-  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
+
+  // 📅 Automate Historical Date
+  const getPreviousDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split("T")[0];
+  };
+  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=${getPreviousDate()}&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
   const fetchData = async () => {
     try {
@@ -28,9 +35,9 @@ export default function Home() {
       const liveData = await liveResponse.json();
       const historicalData = await historicalResponse.json();
 
-      if (!liveData.success || !historicalData.success) {
-        throw new Error("API fetch failed");
-      }
+      // ⚡ Improved Error Handling
+      if (!liveData.success) throw new Error("Failed to fetch live currency data.");
+      if (!historicalData.success) throw new Error("Failed to fetch historical currency data.");
 
       let rates = {};
       Object.entries(liveData.quotes).forEach(([key, value]) => {
@@ -41,65 +48,50 @@ export default function Home() {
       let totalStrength = 0;
       const baseCurrency = "USD";
 
-      // const calculateChange = (liveRate, historicalRate) =>
-      //   ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+      // ⚡ Improved calculateChange Function
       const calculateChange = (liveRate, historicalRate) => {
-    console.log("Live Rate:", liveRate, "| Type:", typeof liveRate);
-    console.log("Historical Rate:", historicalRate, "| Type:", typeof historicalRate);
-    
-    if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
-        console.log("Invalid data detected!");
-        return "N/A";
-    }
-    
-    const change = (liveRate - historicalRate) / historicalRate * 100;
-    console.log("Calculated Change:", change, "| Type:", typeof change);
-    
-    return change.toFixed(2);
-};
+        if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
+          return 0;
+        }
+        return (((liveRate - historicalRate) / historicalRate) * 100).toFixed(2);
+      };
 
-};
-
-
-
-      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+      // 🧩 Optimized Strength Calculation
+      const adjustedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
         const liveRate = rates[`${currency}USD`] ?? (currency === baseCurrency ? 1 : 0);
         const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
-
-        const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
+        const change = calculateChange(1 / liveRate, historicalRate);
         totalStrength += Math.abs(parseFloat(change));
 
         return {
           code: currency,
-          strength: parseFloat(change),
+          strength: Math.abs(parseFloat(change))
         };
-      });
-
-      const adjustedStrengths = normalizedStrengths.map((currency) => ({
+      }).map((currency) => ({
         ...currency,
-        strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
+        strength: ((currency.strength / totalStrength) * 100).toFixed(2),
       }));
 
       setPreviousCurrencies([...currencies]);
       setCurrencies(adjustedStrengths);
       setError(null);
 
+      // ⚡ Improved Opportunity Detection
       const validPairs = [
         "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD",
         "GBPJPY", "USDJPY", "USDCAD", "USDCHF",
       ];
 
       const newOpportunities = validPairs.map((pair) => {
-        const base = pair.slice(0, 3);
-        const quote = pair.slice(3);
+        const [base, quote] = [pair.slice(0, 3), pair.slice(3)];
         const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
         const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
 
-        return baseStrength > quoteStrength + 5
-          ? { pair, type: "buy" }
-          : quoteStrength > baseStrength + 5
-            ? { pair, type: "sell" }
-            : null;
+        const diff = Math.abs(baseStrength - quoteStrength);
+        if (diff > 5) {
+          return { pair, type: baseStrength > quoteStrength ? "buy" : "sell" };
+        }
+        return null;
       }).filter(Boolean);
 
       setOpportunities(newOpportunities);
@@ -164,7 +156,9 @@ export default function Home() {
             )}
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
-            <BlogComponent /> {/* Bottom AD for Mobile */}
+            <BlogComponent />
+
+            {/* Bottom AD for Mobile */}
             <div className="d-lg-none mt-3 text-center">
               <img
                 src="/images/download.jpeg"
