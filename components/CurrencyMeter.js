@@ -118,7 +118,6 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
                     style={{ width: `${strength}%`, transition: "width 0.5s" }}
                   ></div>
                 </div>
-                <p className="card-text">Strength: {strength.toFixed(2)}%</p>
               </div>
             </div>
           </div>
