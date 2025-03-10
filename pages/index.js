@@ -44,7 +44,8 @@ export default function Home() {
       // const calculateChange = (liveRate, historicalRate) =>
       //   ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
       const calculateChange = (liveRate, historicalRate) => {
-    console.log("Live Rate:", liveRate, "Historical Rate:", historicalRate);
+    console.log("Live Rate:", liveRate, "| Type:", typeof liveRate);
+    console.log("Historical Rate:", historicalRate, "| Type:", typeof historicalRate);
     
     if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
         console.log("Invalid data detected!");
@@ -52,9 +53,11 @@ export default function Home() {
     }
     
     const change = (liveRate - historicalRate) / historicalRate * 100;
-    console.log("Calculated Change:", change);
+    console.log("Calculated Change:", change, "| Type:", typeof change);
     
     return change.toFixed(2);
+};
+
 };
 
 
