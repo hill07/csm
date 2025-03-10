@@ -44,11 +44,19 @@ export default function Home() {
       // const calculateChange = (liveRate, historicalRate) =>
       //   ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
       const calculateChange = (liveRate, historicalRate) => {
-        if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
-          return "N/A";  // Return "N/A" or any default value if rates are invalid or zero
-        }
-        return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
-      };
+    console.log("Live Rate:", liveRate, "Historical Rate:", historicalRate);
+    
+    if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
+        console.log("Invalid data detected!");
+        return "N/A";
+    }
+    
+    const change = (liveRate - historicalRate) / historicalRate * 100;
+    console.log("Calculated Change:", change);
+    
+    return change.toFixed(2);
+};
+
 
 
       const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
