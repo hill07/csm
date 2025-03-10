@@ -41,8 +41,15 @@ export default function Home() {
       let totalStrength = 0;
       const baseCurrency = "USD";
 
-      const calculateChange = (liveRate, historicalRate) =>
-        ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+      // const calculateChange = (liveRate, historicalRate) =>
+      //   ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+      const calculateChange = (liveRate, historicalRate) => {
+        if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
+          return "N/A";  // Return "N/A" or any default value if rates are invalid or zero
+        }
+        return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+      };
+
 
       const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
         const liveRate = rates[`${currency}USD`] ?? (currency === baseCurrency ? 1 : 0);
