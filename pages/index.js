@@ -53,7 +53,10 @@ export default function Home() {
         if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
           return 0;
         }
-        return (((liveRate - historicalRate) / historicalRate) * 100).toFixed(2);
+        return isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0
+  ? 0
+  : (((liveRate - historicalRate) / historicalRate) * 100).toFixed(2);
+
       };
 
       // 🧩 Optimized Strength Calculation
@@ -69,7 +72,10 @@ export default function Home() {
         };
       }).map((currency) => ({
         ...currency,
-        strength: ((currency.strength / totalStrength) * 100).toFixed(2),
+        strength: isNaN(currency.strength) || isNaN(totalStrength) || totalStrength === 0
+  ? 0
+  : ((currency.strength / totalStrength) * 100).toFixed(2)
+
       }));
 
       setPreviousCurrencies([...currencies]);
