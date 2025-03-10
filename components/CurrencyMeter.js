@@ -104,20 +104,24 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
             <div className="card text-center border-light shadow-sm">
               <div className="card-body">
                 <h5 className="card-title">
-                  {code}{" "}
-                  {arrowDirection[code] === "up" ? (
-                    <FaArrowUp className="text-success" />
-                  ) : (
-                    <FaArrowDown className="text-danger" />
-                  )}
+                  {code} {arrowDirection[code] === "up" ? <FaArrowUp className="text-success" /> : <FaArrowDown className="text-danger" />}
                 </h5>
-                <div className="progress mb-2" style={{ height: "8px" }}>
-                  <div
-                    className="progress-bar bg-primary"
-                    role="progressbar"
-                    style={{ width: `${strength}%`, transition: "width 0.5s" }}
-                  ></div>
+                <div className="d-flex justify-content-center align-items-end mb-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: "6px",
+                        height: `${8 + i * 4}px`, // Vadaarta height: 8px thi start kari 4px nu increment
+                        backgroundColor: i < Math.ceil(strength / 20) ? "#28a745" : "#d3d3d3",
+                        margin: "0 2px",
+                      }}
+                    />
+                  ))}
                 </div>
+
+
+                <p className="card-text">Strength: {Number(strength).toFixed(2)}%</p>
               </div>
             </div>
           </div>
@@ -127,4 +131,4 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   );
 };
 
-export default CurrencyMeter;
+export default CurrencyMeter; 
