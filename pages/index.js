@@ -14,40 +14,77 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
 
-  const fetchCurrencyData = async () => {
-    const apiKey = "6b346cc441a1c8d86c7232d36e876669";
-    const apiUrl = `https://apilayer.net/api/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+  const apiKey = "e0ecc8f09bbc2042a70f1e67b737f593";
+  const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
+  const fetchData = async () => {
     try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-      if (!data.success || !data.quotes) throw new Error("API fetch failed");
+      const [liveResponse, historicalResponse] = await Promise.all([
+        fetch(liveUrl),
+        fetch(historicalUrl),
+      ]);
+
+      const liveData = await liveResponse.json();
+      const historicalData = await historicalResponse.json();
+
+      if (!liveData.success || !historicalData.success) {
+        throw new Error("API fetch failed");
+      }
 
       let rates = {};
-      Object.entries(data.quotes).forEach(([key, value]) => {
+      Object.entries(liveData.quotes).forEach(([key, value]) => {
         rates[key] = value;
         rates[`${key.slice(3)}USD`] = 1 / value;
       });
 
-      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => ({
-        code: currency,
-        strength: ((rates[`${currency}USD`] ?? 0) / 8) * 100 || 0,
+      let totalStrength = 0;
+      const baseCurrency = "USD";
+
+      const calculateChange = (liveRate, historicalRate) =>
+        ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+
+      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+        const liveRate = rates[`${currency}USD`] ?? (currency === baseCurrency ? 1 : 0);
+        const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+
+        const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
+        totalStrength += Math.abs(parseFloat(change));
+
+        return {
+          code: currency,
+          strength: parseFloat(change),
+        };
+      });
+
+      const adjustedStrengths = normalizedStrengths.map((currency) => ({
+        ...currency,
+        strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
       }));
 
       setPreviousCurrencies([...currencies]);
-      setCurrencies(normalizedStrengths);
+      setCurrencies(adjustedStrengths);
       setError(null);
 
-      // 📌 Calculate Opportunities
-      const newOpportunities = [];
-      normalizedStrengths.forEach((currency) => {
-        if (currency.strength > 1) {  // Example condition for Buy
-          newOpportunities.push({ pair: `${currency.code}/USD`, type: "buy" });
-        } else if (currency.strength < 2) {  // Example condition for Sell
-          newOpportunities.push({ pair: `${currency.code}/USD`, type: "sell" });
-        }
-      });
-      setOpportunities(newOpportunities);  // 📌 Update opportunities state
+      const validPairs = [
+        "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD",
+        "GBPJPY", "USDJPY", "USDCAD", "USDCHF",
+      ];
+
+      const newOpportunities = validPairs.map((pair) => {
+        const base = pair.slice(0, 3);
+        const quote = pair.slice(3);
+        const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
+        const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
+
+        return baseStrength > quoteStrength + 5
+          ? { pair, type: "buy" }
+          : quoteStrength > baseStrength + 5
+            ? { pair, type: "sell" }
+            : null;
+      }).filter(Boolean);
+
+      setOpportunities(newOpportunities);
 
     } catch (error) {
       console.error("Error:", error);
@@ -56,8 +93,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchCurrencyData();
-    const interval = setInterval(fetchCurrencyData, 10000);
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -72,7 +109,7 @@ export default function Home() {
 
       <div className="container-fluid">
         <div className="row">
-          {/* Left AD - Fixed for Desktop */}
+          {/* Desktop AD - Left */}
           <aside className="d-none d-lg-block">
             <div
               className="bg-light border rounded shadow"
@@ -98,30 +135,18 @@ export default function Home() {
                 style={{ maxWidth: "90%", margin: "0 auto" }}
               />
             </div>
-
             {error ? (
               <div className="alert alert-danger">{error}</div>
             ) : (
               <CurrencyMeter
                 currencies={currencies}
                 previousCurrencies={previousCurrencies}
-                fetchCurrencyData={fetchCurrencyData}
+                fetchCurrencyData={fetchData}
               />
-            )}{/* Top AD for Mobile */}
-            <div className="d-lg-none mb-3 text-center">
-              <img
-                src="/images/download.jpeg"
-                alt="Ad"
-                className="img-fluid rounded shadow-sm"
-                style={{ maxWidth: "90%", margin: "0 auto" }}
-              />
-            </div>
-
+            )}
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
-            <BlogComponent />
-
-            {/* Bottom AD for Mobile */}
+            <BlogComponent /> {/* Bottom AD for Mobile */}
             <div className="d-lg-none mt-3 text-center">
               <img
                 src="/images/download.jpeg"
@@ -132,7 +157,7 @@ export default function Home() {
             </div>
           </main>
 
-          {/* Right AD - Fixed for Desktop */}
+          {/* Desktop AD - Right */}
           <aside className="d-none d-lg-block">
             <div
               className="bg-light border rounded shadow"
@@ -147,6 +172,11 @@ export default function Home() {
               <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
             </div>
           </aside>
+
+          {/* Mobile AD Section */}
+          <div className="d-lg-none text-center my-3">
+            <img src="/images/download.jpeg" alt="Mobile Ad" className="img-fluid rounded mb-2" />
+          </div>
         </div>
       </div>
 
