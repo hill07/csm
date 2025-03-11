@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CurrencyMeter from "../components/CurrencyMeter";
-import CurrencyPairs from "@/components/CurrencyPairs";
+import CurrencyPairs from "@/components/CurrnecyPairs";
 import BlogComponent from "@/components/Blog";
 import Opportunities from "@/components/Opportunities";
 
