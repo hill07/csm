@@ -38,34 +38,31 @@ export default function Home() {
         rates[`${key.slice(3)}USD`] = 1 / value;
       });
 
-      const baseCurrency = "USD"; // ✅ FIXED: Removed duplicate declaration
       let totalStrength = 0;
-      let usdStrength = 10; // ✅ Default value for USD to prevent zero division
+      let strengths = {};
+      const currencyList = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
 
       const calculateChange = (liveRate, historicalRate) => {
         if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
-          return "N/A";
+          return 0;
         }
-        return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
+        return ((liveRate - historicalRate) / historicalRate) * 100;
       };
 
-      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+      currencyList.forEach((currency) => {
         if (currency === "USD") {
-          return { code: "USD", strength: usdStrength };
+          strengths["USD"] = 0;
+        } else {
+          const liveRate = rates[`${currency}USD`] ?? 0;
+          const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+          strengths[currency] = calculateChange(1 / liveRate, historicalRate);
         }
-
-        const liveRate = rates[`${currency}USD`] ?? 0;
-        const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
-        const change = (liveRate && historicalRate) ? calculateChange(1 / liveRate, historicalRate) : 0;
-
-        totalStrength += Math.abs(parseFloat(change));
-
-        return { code: currency, strength: parseFloat(change) };
+        totalStrength += Math.abs(strengths[currency]);
       });
 
-      const adjustedStrengths = normalizedStrengths.map((currency) => ({
-        ...currency,
-        strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
+      const adjustedStrengths = currencyList.map((currency) => ({
+        code: currency,
+        strength: Math.abs((strengths[currency] / totalStrength) * 100).toFixed(2),
       }));
 
       setPreviousCurrencies([...currencies]);
@@ -86,8 +83,8 @@ export default function Home() {
         return baseStrength > quoteStrength + 5
           ? { pair, type: "buy" }
           : quoteStrength > baseStrength + 5
-            ? { pair, type: "sell" }
-            : null;
+          ? { pair, type: "sell" }
+          : null;
       }).filter(Boolean);
 
       setOpportunities(newOpportunities);
@@ -103,7 +100,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    setTimeout(fetchData, 2000); // Delayed initial fetch
+    setTimeout(fetchData, 2000);
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
