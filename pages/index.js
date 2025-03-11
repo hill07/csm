@@ -38,8 +38,9 @@ export default function Home() {
         rates[`${key.slice(3)}USD`] = 1 / value;
       });
 
+      const baseCurrency = "USD"; // ✅ FIXED: Removed duplicate declaration
       let totalStrength = 0;
-      const baseCurrency = "USD";
+      let usdStrength = 10; // ✅ Default value for USD to prevent zero division
 
       const calculateChange = (liveRate, historicalRate) => {
         if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
@@ -48,32 +49,19 @@ export default function Home() {
         return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
       };
 
-      const baseCurrency = "USD";
-let totalStrength = 0;
-let usdStrength = 10; // Default value for USD to prevent zero issue
+      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+        if (currency === "USD") {
+          return { code: "USD", strength: usdStrength };
+        }
 
-const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
-  if (currency === "USD") {
-    return { code: "USD", strength: usdStrength };
-  }
+        const liveRate = rates[`${currency}USD`] ?? 0;
+        const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+        const change = (liveRate && historicalRate) ? calculateChange(1 / liveRate, historicalRate) : 0;
 
-  const liveRate = rates[`${currency}USD`] ?? 0;
-  const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
-  const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
+        totalStrength += Math.abs(parseFloat(change));
 
-  totalStrength += Math.abs(parseFloat(change));
-
-  return { code: currency, strength: parseFloat(change) };
-});
-
-// Normalize strengths so they sum to 100%
-const adjustedStrengths = normalizedStrengths.map((currency) => ({
-  ...currency,
-  strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
-}));
-
-setCurrencies(adjustedStrengths);
-
+        return { code: currency, strength: parseFloat(change) };
+      });
 
       const adjustedStrengths = normalizedStrengths.map((currency) => ({
         ...currency,
