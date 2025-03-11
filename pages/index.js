@@ -14,7 +14,7 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
 
-  const apiKey = "e0ecc8f09bbc2042a70f1e67b737f593";
+  const apiKey = "506ea8ae602c070ef5b439b6565c88f3";
   const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
 
   // 📅 Automate Historical Date
