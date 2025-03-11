@@ -14,18 +14,11 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState([]);
   const [error, setError] = useState(null);
 
-  const apiKey = "506ea8ae602c070ef5b439b6565c88f3";
+  const apiKey = "e0ecc8f09bbc2042a70f1e67b737f593";
   const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
-  // 📅 Automate Historical Date
-  const getPreviousDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() - 1);
-    return date.toISOString().split("T")[0];
-  };
-  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=${getPreviousDate()}&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
-
-  const fetchData = async () => {
+  const fetchData = async (retries = 3) => {
     try {
       const [liveResponse, historicalResponse] = await Promise.all([
         fetch(liveUrl),
@@ -35,9 +28,9 @@ export default function Home() {
       const liveData = await liveResponse.json();
       const historicalData = await historicalResponse.json();
 
-      // ⚡ Improved Error Handling
-      if (!liveData.success) throw new Error("Failed to fetch live currency data.");
-      if (!historicalData.success) throw new Error("Failed to fetch historical currency data.");
+      if (!liveData.success || !historicalData.success || !liveData.quotes || !historicalData.quotes) {
+        throw new Error("API fetch failed");
+      }
 
       let rates = {};
       Object.entries(liveData.quotes).forEach(([key, value]) => {
@@ -48,68 +41,67 @@ export default function Home() {
       let totalStrength = 0;
       const baseCurrency = "USD";
 
-      // ⚡ Improved calculateChange Function
       const calculateChange = (liveRate, historicalRate) => {
         if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
-          return 0;
+          return "N/A";
         }
-        return isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0
-  ? 0
-  : (((liveRate - historicalRate) / historicalRate) * 100).toFixed(2);
-
+        return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
       };
 
-      // 🧩 Optimized Strength Calculation
-      const adjustedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
         const liveRate = rates[`${currency}USD`] ?? (currency === baseCurrency ? 1 : 0);
         const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
-        const change = calculateChange(1 / liveRate, historicalRate);
+
+        const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
         totalStrength += Math.abs(parseFloat(change));
 
         return {
           code: currency,
-          strength: Math.abs(parseFloat(change))
+          strength: parseFloat(change),
         };
-      }).map((currency) => ({
-        ...currency,
-        strength: isNaN(currency.strength) || isNaN(totalStrength) || totalStrength === 0
-  ? 0
-  : ((currency.strength / totalStrength) * 100).toFixed(2)
+      });
 
+      const adjustedStrengths = normalizedStrengths.map((currency) => ({
+        ...currency,
+        strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
       }));
 
       setPreviousCurrencies([...currencies]);
       setCurrencies(adjustedStrengths);
       setError(null);
 
-      // ⚡ Improved Opportunity Detection
       const validPairs = [
         "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD",
         "GBPJPY", "USDJPY", "USDCAD", "USDCHF",
       ];
 
       const newOpportunities = validPairs.map((pair) => {
-        const [base, quote] = [pair.slice(0, 3), pair.slice(3)];
+        const base = pair.slice(0, 3);
+        const quote = pair.slice(3);
         const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
         const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
 
-        const diff = Math.abs(baseStrength - quoteStrength);
-        if (diff > 5) {
-          return { pair, type: baseStrength > quoteStrength ? "buy" : "sell" };
-        }
-        return null;
+        return baseStrength > quoteStrength + 5
+          ? { pair, type: "buy" }
+          : quoteStrength > baseStrength + 5
+            ? { pair, type: "sell" }
+            : null;
       }).filter(Boolean);
 
       setOpportunities(newOpportunities);
-
     } catch (error) {
-      console.error("Error:", error);
-      setError("Failed to fetch currency data.");
+      console.error("Error fetching data:", error);
+      if (retries > 0) {
+        console.log(`Retrying... Attempts left: ${retries}`);
+        setTimeout(() => fetchData(retries - 1), 3000);
+      } else {
+        setError("Failed to fetch currency data.");
+      }
     }
   };
 
   useEffect(() => {
-    fetchData();
+    setTimeout(fetchData, 2000); // Delayed initial fetch
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -162,9 +154,7 @@ export default function Home() {
             )}
             <Opportunities opportunities={opportunities} />
             <CurrencyPairs />
-            <BlogComponent />
-
-            {/* Bottom AD for Mobile */}
+            <BlogComponent /> {/* Bottom AD for Mobile */}
             <div className="d-lg-none mt-3 text-center">
               <img
                 src="/images/download.jpeg"
