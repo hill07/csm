@@ -50,7 +50,7 @@ export default function Home() {
             const liveRate = rates[`${currency}USD`] ?? 0;
             const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
             const rawStrength = ((1 / liveRate - historicalRate) / historicalRate) * 100;
-            
+
             // Normalize strength to a range of 0 to 100
             strengths[currency] = Math.max(0, Math.min(100, 50 + rawStrength));
           }
@@ -127,7 +127,10 @@ export default function Home() {
               <div className="alert alert-danger">{error}</div>
             ) : isClient && currencies ? ( // Ensure SSR doesn't mismatch
               <>
-                <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} />
+                <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} />{/* Bottom AD for Mobile */}
+                <div className="d-lg-none mt-3 text-center">
+                  <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded shadow-sm" />
+                </div>
                 <Opportunities opportunities={opportunities} />
                 <CurrencyPairs />
                 <BlogComponent />
@@ -136,10 +139,7 @@ export default function Home() {
               <p>Loading...</p>
             )}
 
-            {/* Bottom AD for Mobile */}
-            <div className="d-lg-none mt-3 text-center">
-              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded shadow-sm" />
-            </div>
+
           </main>
 
           {/* Desktop AD - Right */}
@@ -148,11 +148,6 @@ export default function Home() {
               <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
             </div>
           </aside>
-
-          {/* Mobile AD Section */}
-          <div className="d-lg-none text-center my-3">
-            <img src="/images/download.jpeg" alt="Mobile Ad" className="img-fluid rounded mb-2" />
-          </div>
         </div>
       </div>
 
