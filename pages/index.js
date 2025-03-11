@@ -113,14 +113,14 @@ export default function Home() {
           {/* Desktop AD - Left */}
           <aside className="d-none d-lg-block">
             <div className="ad-box-left">
-              <img src="/images/download1.jpeg" alt="Ad" className="img-fluid rounded" />
+              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
             </div>
           </aside>
 
           <main className="col-lg-8 col-md-12 text-center py-4 mt-3 mx-auto">
             {/* Top AD for Mobile */}
             <div className="d-lg-none mb-3 text-center">
-              <img src="/images/download1.jpeg" alt="Ad" className="img-fluid rounded shadow-sm" />
+              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded shadow-sm" />
             </div>
 
             {error ? (
@@ -145,13 +145,13 @@ export default function Home() {
           {/* Desktop AD - Right */}
           <aside className="d-none d-lg-block">
             <div className="ad-box-right">
-              <img src="/images/download1.jpeg" alt="Ad" className="img-fluid rounded" />
+              <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded" />
             </div>
           </aside>
 
           {/* Mobile AD Section */}
           <div className="d-lg-none text-center my-3">
-            <img src="/images/download1.jpeg" alt="Mobile Ad" className="img-fluid rounded mb-2" />
+            <img src="/images/download.jpeg" alt="Mobile Ad" className="img-fluid rounded mb-2" />
           </div>
         </div>
       </div>
