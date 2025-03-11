@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Head from "next/head";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CurrencyMeter from "../components/CurrencyMeter";
-import CurrencyPairs from "@/components/CurrnecyPairs";
+import CurrencyPairs from "@/components/CurrencyPairs";
 import BlogComponent from "@/components/Blog";
 import Opportunities from "@/components/Opportunities";
 
@@ -18,19 +18,27 @@ export default function Home() {
   const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
   const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
-  const fetchData = async (retries = 3) => {
-    try {
-      const [liveResponse, historicalResponse] = await Promise.all([
-        fetch(liveUrl),
-        fetch(historicalUrl),
-      ]);
+  const [historicalData, setHistoricalData] = useState(null);
 
-      const liveData = await liveResponse.json();
-      const historicalData = await historicalResponse.json();
-
-      if (!liveData.success || !historicalData.success || !liveData.quotes || !historicalData.quotes) {
-        throw new Error("API fetch failed");
+  useEffect(() => {
+    const fetchHistoricalData = async () => {
+      try {
+        const response = await fetch(historicalUrl);
+        const data = await response.json();
+        if (!data.success || !data.quotes) throw new Error("Failed to fetch historical data");
+        setHistoricalData(data);
+      } catch (err) {
+        console.error("Error fetching historical data:", err);
       }
+    };
+    fetchHistoricalData();
+  }, []);
+
+  const fetchLiveData = async (retries = 3) => {
+    try {
+      const response = await fetch(liveUrl);
+      const liveData = await response.json();
+      if (!liveData.success || !liveData.quotes) throw new Error("Live API fetch failed");
 
       let rates = {};
       Object.entries(liveData.quotes).forEach(([key, value]) => {
@@ -38,31 +46,29 @@ export default function Home() {
         rates[`${key.slice(3)}USD`] = 1 / value;
       });
 
-      let totalStrength = 0;
-      let strengths = {};
+      if (!historicalData) return;
+
       const currencyList = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
+      let strengths = { USD: 0 };
+      let totalStrength = 0;
 
       const calculateChange = (liveRate, historicalRate) => {
-        if (isNaN(liveRate) || isNaN(historicalRate) || historicalRate === 0) {
-          return 0;
-        }
+        if (!liveRate || !historicalRate || historicalRate === 0) return 0;
         return ((liveRate - historicalRate) / historicalRate) * 100;
       };
 
       currencyList.forEach((currency) => {
-        if (currency === "USD") {
-          strengths["USD"] = 0;
-        } else {
-          const liveRate = rates[`${currency}USD`] ?? 0;
-          const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+        if (currency !== "USD") {
+          const liveRate = rates[`${currency}USD`] || 0;
+          const historicalRate = historicalData.quotes[`USD${currency}`] || 1;
           strengths[currency] = calculateChange(1 / liveRate, historicalRate);
+          totalStrength += Math.abs(strengths[currency]);
         }
-        totalStrength += Math.abs(strengths[currency]);
       });
 
       const adjustedStrengths = currencyList.map((currency) => ({
         code: currency,
-        strength: Math.abs((strengths[currency] / totalStrength) * 100).toFixed(2),
+        strength: currency === "USD" ? 0 : ((strengths[currency] / totalStrength) * 100).toFixed(2),
       }));
 
       setPreviousCurrencies([...currencies]);
@@ -79,31 +85,29 @@ export default function Home() {
         const quote = pair.slice(3);
         const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
         const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
-
-        return baseStrength > quoteStrength + 5
-          ? { pair, type: "buy" }
-          : quoteStrength > baseStrength + 5
-          ? { pair, type: "sell" }
-          : null;
+        return baseStrength > quoteStrength + 5 ? { pair, type: "buy" } :
+               quoteStrength > baseStrength + 5 ? { pair, type: "sell" } : null;
       }).filter(Boolean);
 
       setOpportunities(newOpportunities);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching live data:", error);
       if (retries > 0) {
         console.log(`Retrying... Attempts left: ${retries}`);
-        setTimeout(() => fetchData(retries - 1), 3000);
+        setTimeout(() => fetchLiveData(retries - 1), 3000);
       } else {
-        setError("Failed to fetch currency data.");
+        setError("Failed to fetch live currency data.");
       }
     }
   };
 
   useEffect(() => {
-    setTimeout(fetchData, 2000);
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (historicalData) {
+      setTimeout(fetchLiveData, 2000);
+      const interval = setInterval(fetchLiveData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [historicalData]);
 
   return (
     <div className="bg-light">
