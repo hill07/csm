@@ -48,18 +48,32 @@ export default function Home() {
         return ((liveRate - historicalRate) / historicalRate * 100).toFixed(2);
       };
 
-      const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
-        const liveRate = rates[`${currency}USD`] ?? (currency === baseCurrency ? 1 : 0);
-        const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+      const baseCurrency = "USD";
+let totalStrength = 0;
+let usdStrength = 10; // Default value for USD to prevent zero issue
 
-        const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
-        totalStrength += Math.abs(parseFloat(change));
+const normalizedStrengths = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"].map((currency) => {
+  if (currency === "USD") {
+    return { code: "USD", strength: usdStrength };
+  }
 
-        return {
-          code: currency,
-          strength: parseFloat(change),
-        };
-      });
+  const liveRate = rates[`${currency}USD`] ?? 0;
+  const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+  const change = liveRate && historicalRate ? calculateChange(1 / liveRate, historicalRate) : 0;
+
+  totalStrength += Math.abs(parseFloat(change));
+
+  return { code: currency, strength: parseFloat(change) };
+});
+
+// Normalize strengths so they sum to 100%
+const adjustedStrengths = normalizedStrengths.map((currency) => ({
+  ...currency,
+  strength: Math.abs((currency.strength / totalStrength) * 100).toFixed(2),
+}));
+
+setCurrencies(adjustedStrengths);
+
 
       const adjustedStrengths = normalizedStrengths.map((currency) => ({
         ...currency,
