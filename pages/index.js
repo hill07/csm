@@ -15,12 +15,13 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
-  const apiKey = "4655e187b60102fab3e370b7e5b71feb";
+  const apiKey = "506ea8ae602c070ef5b439b6565c88f3";
+  const baseURL = "https://api.currencylayer.com";
 
   const fetchData = async (retries = 3) => {
     try {
-      const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
-      const historicalUrl = `https://api.currencylayer.com}/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
+      const liveUrl = `${baseURL}/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+      const historicalUrl = `${baseURL}/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
       const [liveResponse, historicalResponse] = await Promise.all([
         fetch(liveUrl),
@@ -28,12 +29,11 @@ export default function Home() {
       ]);
 
       if (!liveResponse.ok || !historicalResponse.ok) throw new Error("Network response was not ok");
-
+      
       const liveData = await liveResponse.json();
       const historicalData = await historicalResponse.json();
-
-      if (!liveData.success) throw new Error("API fetch failed");
-      if (!historicalData.success) throw new Error("API fetch failed");
+      
+      if (!liveData.success || !historicalData.success) throw new Error("API fetch failed");
 
       let rates = {};
       Object.entries(liveData.quotes).forEach(([key, value]) => {
@@ -77,8 +77,8 @@ export default function Home() {
         return baseStrength > quoteStrength + 5
           ? { pair, type: "buy" }
           : quoteStrength > baseStrength + 5
-            ? { pair, type: "sell" }
-            : null;
+          ? { pair, type: "sell" }
+          : null;
       }).filter(Boolean);
 
       setOpportunities(newOpportunities);
