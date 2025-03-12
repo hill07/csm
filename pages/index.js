@@ -15,87 +15,87 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
-  const apiKey = "506ea8ae602c070ef5b439b6565c88f3";
-  const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
-  const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
+  const apiKey = "4655e187b60102fab3e370b7e5b71feb";
+
+  const fetchData = async (retries = 3) => {
+    try {
+      const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
+      const historicalUrl = `https://api.currencylayer.com}/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
+
+      const [liveResponse, historicalResponse] = await Promise.all([
+        fetch(liveUrl),
+        fetch(historicalUrl),
+      ]);
+
+      if (!liveResponse.ok || !historicalResponse.ok) throw new Error("Network response was not ok");
+
+      const liveData = await liveResponse.json();
+      const historicalData = await historicalResponse.json();
+
+      if (!liveData.success) throw new Error("API fetch failed");
+      if (!historicalData.success) throw new Error("API fetch failed");
+
+      let rates = {};
+      Object.entries(liveData.quotes).forEach(([key, value]) => {
+        rates[key] = value;
+        rates[`${key.slice(3)}USD`] = 1 / value;
+      });
+
+      let strengths = {};
+      const currencyList = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
+      currencyList.forEach((currency) => {
+        if (currency === "USD") {
+          strengths["USD"] = 50; // Neutral USD
+        } else {
+          const liveRate = rates[`${currency}USD`] ?? 0;
+          const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
+          const rawStrength = ((1 / liveRate - historicalRate) / historicalRate) * 100;
+          strengths[currency] = Math.max(0, Math.min(100, 50 + rawStrength));
+        }
+      });
+
+      const adjustedStrengths = currencyList.map((currency) => ({
+        code: currency,
+        strength: strengths[currency].toFixed(2),
+      }));
+
+      setPreviousCurrencies(currencies ? [...currencies] : []);
+      setCurrencies(adjustedStrengths);
+      setError(null);
+
+      const validPairs = [
+        "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD",
+        "GBPJPY", "USDJPY", "USDCAD", "USDCHF",
+      ];
+
+      const newOpportunities = validPairs.map((pair) => {
+        const base = pair.slice(0, 3);
+        const quote = pair.slice(3);
+        const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
+        const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
+
+        return baseStrength > quoteStrength + 5
+          ? { pair, type: "buy" }
+          : quoteStrength > baseStrength + 5
+            ? { pair, type: "sell" }
+            : null;
+      }).filter(Boolean);
+
+      setOpportunities(newOpportunities);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      if (retries > 0) {
+        setTimeout(() => fetchData(retries - 1), 5000);
+      } else {
+        setError("Failed to fetch currency data.");
+      }
+    }
+  };
 
   useEffect(() => {
     setIsClient(true);
-
-    const fetchData = async (retries = 3) => {
-      try {
-        const [liveResponse, historicalResponse] = await Promise.all([
-          fetch(liveUrl),
-          fetch(historicalUrl),
-        ]);
-
-        const liveData = await liveResponse.json();
-        const historicalData = await historicalResponse.json();
-
-        if (!liveData.success || !historicalData.success) throw new Error("API fetch failed");
-
-        let rates = {};
-        Object.entries(liveData.quotes).forEach(([key, value]) => {
-          rates[key] = value;
-          rates[`${key.slice(3)}USD`] = 1 / value;
-        });
-
-        let strengths = {};
-        const currencyList = ["USD", "EUR", "GBP", "AUD", "NZD", "JPY", "CHF", "CAD"];
-
-        currencyList.forEach((currency) => {
-          if (currency === "USD") {
-            strengths["USD"] = 50; // Neutral value for USD
-          } else {
-            const liveRate = rates[`${currency}USD`] ?? 0;
-            const historicalRate = historicalData.quotes[`USD${currency}`] ?? 1;
-            const rawStrength = ((1 / liveRate - historicalRate) / historicalRate) * 100;
-
-            // Normalize strength to a range of 0 to 100
-            strengths[currency] = Math.max(0, Math.min(100, 50 + rawStrength));
-          }
-        });
-
-        const adjustedStrengths = currencyList.map((currency) => ({
-          code: currency,
-          strength: strengths[currency].toFixed(2),
-        }));
-
-        setPreviousCurrencies(currencies ? [...currencies] : []);
-        setCurrencies(adjustedStrengths);
-        setError(null);
-
-        const validPairs = [
-          "EURUSD", "GBPUSD", "AUDUSD", "NZDUSD",
-          "GBPJPY", "USDJPY", "USDCAD", "USDCHF",
-        ];
-
-        const newOpportunities = validPairs.map((pair) => {
-          const base = pair.slice(0, 3);
-          const quote = pair.slice(3);
-          const baseStrength = adjustedStrengths.find((c) => c.code === base)?.strength || 0;
-          const quoteStrength = adjustedStrengths.find((c) => c.code === quote)?.strength || 0;
-
-          return baseStrength > quoteStrength + 5
-            ? { pair, type: "buy" }
-            : quoteStrength > baseStrength + 5
-              ? { pair, type: "sell" }
-              : null;
-        }).filter(Boolean);
-
-        setOpportunities(newOpportunities);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        if (retries > 0) {
-          setTimeout(() => fetchData(retries - 1), 5000);
-        } else {
-          setError("Failed to fetch currency data.");
-        }
-      }
-    };
-
     fetchData();
-    const interval = setInterval(fetchData, 60000);
+    const interval = setInterval(fetchData, 30000); // Auto refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -125,9 +125,15 @@ export default function Home() {
 
             {error ? (
               <div className="alert alert-danger">{error}</div>
-            ) : isClient && currencies ? ( // Ensure SSR doesn't mismatch
+            ) : isClient && currencies ? (
               <>
-                <CurrencyMeter currencies={currencies} previousCurrencies={previousCurrencies} />{/* Bottom AD for Mobile */}
+                <CurrencyMeter
+                  fetchCurrencyData={fetchData} // Now properly defined
+                  currencies={currencies}
+                  previousCurrencies={previousCurrencies}
+                />
+
+                {/* Bottom AD for Mobile */}
                 <div className="d-lg-none mt-3 text-center">
                   <img src="/images/download.jpeg" alt="Ad" className="img-fluid rounded shadow-sm" />
                 </div>
@@ -138,8 +144,6 @@ export default function Home() {
             ) : (
               <p>Loading...</p>
             )}
-
-
           </main>
 
           {/* Desktop AD - Right */}
@@ -153,7 +157,6 @@ export default function Home() {
 
       <Footer />
 
-      {/* Custom Styling for Ads */}
       <style jsx>{`
         .ad-box-left, .ad-box-right {
           position: fixed;
