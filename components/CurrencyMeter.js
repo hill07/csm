@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowUp, FaArrowDown, FaSync } from "react-icons/fa";
-import { Tooltip, OverlayTrigger, Spinner } from "react-bootstrap";
+import { Tooltip, OverlayTrigger } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) => {
+const CurrencyMeter = ({ currencies, previousCurrencies }) => {
   const [marketOpen, setMarketOpen] = useState(false);
   const [arrowDirection, setArrowDirection] = useState({});
   const [displayCurrencies, setDisplayCurrencies] = useState(currencies);
-  const [loading, setLoading] = useState(false);
 
-  // Fix for hydration error
   useEffect(() => {
     if (typeof window !== "undefined") {
       const currentTime = new Date();
       const currentHour = currentTime.getUTCHours();
       const currentDay = currentTime.getUTCDay();
       const isOpen = currentDay >= 1 && currentDay <= 5 && currentHour < 22;
-
       setMarketOpen(isOpen);
 
       if (!isOpen && previousCurrencies.length > 0) {
@@ -40,13 +37,6 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
     }
   }, [currencies, previousCurrencies]);
 
-  const handleRefresh = async () => {
-    setLoading(true);
-    await fetchCurrencyData();
-    setLoading(false);
-  };
-
-  // Inject keyframes for smooth animation
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -56,7 +46,7 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
       }
     `;
     document.head.appendChild(style);
-    return () => document.head.removeChild(style); // Clean up on unmount
+    return () => document.head.removeChild(style);
   }, []);
 
   const renderTooltip = (props) => (
@@ -85,14 +75,9 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
           </OverlayTrigger>
           <button
             className="btn btn-dark d-flex align-items-center ms-3"
-            onClick={handleRefresh}
-            disabled={loading}
+            onClick={() => window.location.reload()}
           >
-            {loading ? (
-              <Spinner as="span" animation="border" size="sm" className="me-2" />
-            ) : (
-              <FaSync className="me-2" />
-            )}
+            <FaSync className="me-2" />
             Refresh
           </button>
         </div>
@@ -104,7 +89,12 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
             <div className="card text-center border-light shadow-sm">
               <div className="card-body">
                 <h5 className="card-title">
-                  {code} {arrowDirection[code] === "up" ? <FaArrowUp className="text-success" /> : <FaArrowDown className="text-danger" />}
+                  {code}{" "}
+                  {arrowDirection[code] === "up" ? (
+                    <FaArrowUp className="text-success" />
+                  ) : (
+                    <FaArrowDown className="text-danger" />
+                  )}
                 </h5>
                 <div className="d-flex justify-content-center align-items-end mb-2">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -112,15 +102,14 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
                       key={i}
                       style={{
                         width: "6px",
-                        height: `${8 + i * 4}px`, // Vadaarta height: 8px thi start kari 4px nu increment
-                        backgroundColor: i < Math.ceil(strength / 20) ? "#28a745" : "#d3d3d3",
+                        height: `${8 + i * 4}px`,
+                        backgroundColor:
+                          i < Math.ceil(strength / 20) ? "#28a745" : "#d3d3d3",
                         margin: "0 2px",
                       }}
                     />
                   ))}
                 </div>
-
-
                 <p className="card-text">Strength: {Number(strength).toFixed(2)}%</p>
               </div>
             </div>
@@ -131,4 +120,4 @@ const CurrencyMeter = ({ fetchCurrencyData, currencies, previousCurrencies }) =>
   );
 };
 
-export default CurrencyMeter; 
+export default CurrencyMeter;
