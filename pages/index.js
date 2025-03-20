@@ -15,7 +15,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
-  const apiKey = "4655e187b60102fab3e370b7e5b71feb";
+  const apiKey = "2feb2ffd227dfdf2fbe16b7c7bce3650";
   const liveUrl = `https://api.currencylayer.com/live?access_key=${apiKey}&currencies=EUR,GBP,AUD,NZD,JPY,CHF,CAD&source=USD&format=1`;
   const historicalUrl = `https://api.currencylayer.com/historical?access_key=${apiKey}&date=2025-03-06&currencies=EUR,GBP,USD,AUD,NZD,JPY,CHF,CAD&format=1`;
 
