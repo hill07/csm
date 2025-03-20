@@ -7,7 +7,7 @@ export default function Navbar() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true); // Ensure client-side rendering
+    setIsClient(true);
   }, []);
 
   return (
@@ -27,10 +27,17 @@ export default function Navbar() {
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* Ensure rendering only on client-side */}
         {isClient && (
-          <div className={`collapse navbar-collapse ${isOpen ? "show" : ""}`} id="navbarNav">
-            <ul className="navbar-nav gap-3">
+          <div
+            className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
+            id="navbarNav"
+          >
+            <ul className="navbar-nav gap-3 ms-auto">
+              <li className="nav-item d-lg-none">
+                <Link href="/" className="nav-link">
+                  Home
+                </Link>
+              </li>
               <li className="nav-item">
                 <Link href="/blog" className="nav-link">
                   Blog
