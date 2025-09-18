@@ -147,7 +147,7 @@ export default function Home() {
           {/* Desktop AD - Right */}
           <aside className="d-none d-lg-block">
             <div className="ad-box-right">
-              <img src="/images/download1.jpeg" alt="Ad" className="img-fluid rounded" />
+              // <img src="/images/download1.jpeg" alt="Ad" className="img-fluid rounded" />
             </div>
           </aside>
         </div>
